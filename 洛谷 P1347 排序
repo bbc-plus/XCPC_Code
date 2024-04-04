@@ -1,0 +1,114 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int N = 200;
+
+int n, m;
+vector<char> q; // 全局数组，稳定拓扑时收集排序结果
+
+int Toposort(int k, vector<char> &a, vector<char> &b)
+{
+    vector<vector<char>> access(N); // 对于每个点所指向的点，例如对于access[i][j]表示对于第i个点所指向的第j个点
+
+    unordered_map<char, int> d; // 每个点的入度
+
+    for (int i = 1; i <= k; i++)    //k记录当前读入了多少组数据
+    {
+        int x = a[i];
+        int y = b[i];
+        d[x] = d[x];            // 访问map，使得入度为0的字母也被统计到map.size()中
+        d[y]++;                 // 对每个点的入度进行记录
+        access[x].push_back(y); // 把y放入x的点中
+    }
+
+    int cnt = 0;
+    vector<char> tmp; // 暂存拓扑排序后字母的顺序，便于稳定拓扑时直接收集结果
+    queue<char> ans;    //拓扑排序入度为0的收集队列
+    for (auto i = d.begin(); i != d.end(); i++) //遍历map，找到当前所有读入字母中入度为0的加入队列
+    {
+        if (!(i->second))
+        {
+            cnt++;
+            ans.push(i->first); // 把所有入度为0的点放入ans中
+            tmp.push_back(i->first);
+        }
+    }
+    int ceng = 0;       //统计层数
+    while (!ans.empty())
+    {
+        ceng++;
+        int size = ans.size();
+        while (size--)
+        { // 每层bfs
+            char cur = ans.front();
+            ans.pop();
+            for (auto &next : access[cur]) // 遍历第i个点所指向的所有点
+            {
+                d[next]--;
+                if (!d[next]) // 入度为0
+                {
+                    cnt++;
+                    ans.push(next); // ans需要不断放入入度为0的点
+                    tmp.push_back(next);
+                }
+            }
+        }
+    }
+    // 第一种情况：矛盾
+    if (cnt < d.size()) // 入队的字母数量若小于当前读入的字母总数量，说明有环
+    {
+        // cout << "有环" << '\n';
+        return -1;
+    }
+    // 第二种情况：确定了所有字母顺序
+    if (ceng == n)  //bfs层数等于n，说明可以确定字母顺序
+    {
+        q = tmp; // 用全局数组收集结果
+        // 稳定拓扑
+        return 1;
+    }
+    return 0;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    cin >> n >> m;
+
+    char x, fuhao, y;
+    vector<char> a(m + 1);  //小于号左侧数据
+    vector<char> b(m + 1);  //小于号右侧数据
+
+    bool ok = 0;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> a[i] >> fuhao >> b[i]; // 边读入数据边拓扑
+        if (ok == 1)                  // 如果 已经出现矛盾或者已经确定顺序 则continue把剩下的输入数据读完
+            continue;
+        int res = Toposort(i, a, b); // 收集拓扑结果
+        if (res == -1)
+        {
+            ok = 1; // 已经确定答案，不必再拓扑
+            cout << "Inconsistency found after " << i << " relations.";
+        }
+        else if (res == 1)
+        {
+            ok = 1; // 已经确定答案，不必再拓扑
+            cout << "Sorted sequence determined after " << i << " relations: ";
+            for (int i = 0; i < q.size(); i++)
+            {
+                cout << (char)q[i]; // 打印确定排序后的答案
+            }
+            cout << '.';
+        }
+    }
+    if (ok == 0)
+    {
+        cout << "Sorted sequence cannot be determined."; // 无法确定顺序且不存在矛盾
+    }
+
+    return 0;
+}
