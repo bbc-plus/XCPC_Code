@@ -1,0 +1,134 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+// 判断素数
+bool isPrime(long long n)
+{
+    if (n <= 1)
+        return 0;
+    bool is = 1;
+    for (long long i = 2; i <= sqrt(n); i++)
+    {
+        if (n % i == 0)
+        {
+            is = 0;
+            break;
+        }
+    }
+    if (is)
+        return 1;
+    else
+        return 0;
+}
+// 最大公因数
+long long gcd(long long a, long long b)
+{
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+    ll x, n;
+    cin >> x >> n;
+    ll ans = 0;
+    if (x == 1) // 特判1
+    {
+        cout << n;
+        return 0;
+    }
+    if (n == 1) // 特判2
+    {
+        cout << x;
+        return 0;
+    }
+    unordered_map<ll, ll> mp; // 存储质因数
+    ll cc = x;
+    for (ll i = 2; i * i <= cc; i++) // 寻找质因数，并将其加入map
+    {
+        if (x == 1) //已找全质因数，跳出循环
+            break;
+        while (x % i == 0)  //判断是否为因数
+        {   
+            ll tmp = x / i; //如果i是x的因数，则x/i也是x的因数
+            if (isPrime(i)) //判断是否为质数
+            {
+                mp[i]++;
+                x /= i;
+            }
+            if (isPrime(tmp))   //判断是否为质数
+            {
+                mp[tmp]++;
+                x /= tmp;
+            }
+        }
+    }
+    // 若x为质数，特判
+    if (x != 1)
+    {
+        mp[x]++;
+        x = 1;
+    }
+    if (n >= mp.size()) // n大于质因数的个数的情况
+    {
+        for (auto i = mp.begin(); i != mp.end(); i++)
+        {
+            ans += pow(i->first, i->second); // 相同质因数需乘起来构成一个新的因数
+            n--;                             // 每有一个质因数n--
+        }
+        ans += n; // 若n还有剩余，则每有一个剩余，加一个1进数列
+        cout << ans;
+    }
+    else
+    {
+        // n小于质因数的个数，需合并一些质因数
+        int num = mp.size();
+        // num<n
+        vector<ll> a; // a数组记录需要合并的数
+        for (auto i = mp.begin(); i != mp.end(); i++)   //遍历map
+        {
+            a.push_back(pow(i->first, i->second));
+        }
+        // 采用状压dp
+        ll dp[6006][16] = {0}; // dp[i][j]表示二进制集合i，合并成j个数的最小和
+        // 初始化合并成1个数的dp数组，即将二进制集合里的为1的元素相乘
+        for (int i = 1; i < (1 << num); i++)    //循环从1开始，因为是0的话，集合中就没有数，无法合并
+        {
+            dp[i][1] = 1;
+            for (int j = 0; j < num; j++)
+            {
+                if ((i >> j) & 1)   //每有一个元素，乘上它的值
+                {
+                    dp[i][1] *= a[j];
+                }
+            }
+        }
+        // 从i=2开始dp，寻找j，满足j<i，从而 合并成j个数的dp 和 合并成i-j个数的dp 加起来就是合并成i个数的dp 
+        for (int i = 2; i <= n; i++)
+        {
+            for (int j = 1; j < i; j++) //需满足j<i
+            {
+                for (int k = 1; k < (1 << num); k++)    //枚举合并后的集合状态000……001到111……111（其中的位数依据num的值）
+                {
+                    for (int t = 1; t < k; t++)     //枚举合并前的一个集合状态t，另一个集合即为k-t
+                    {   
+                        if ((t & k) == t)   //如果合并前的其中一个集合t是合并后的集合k的子集，那么说明集合k是可以由t和k-t二者合并来的
+                        {
+                            if (dp[k][i] == 0)      //如果第一次访问此dp值，直接赋值即可（因为dp求的是最小值，而dp的值初始化为0了，第一次不直接赋值的话，取最小值就永远是0了）
+                                dp[k][i] = dp[t][j] + dp[k - t][i - j];
+                            else
+                                dp[k][i] = min(dp[k][i], dp[t][j] + dp[k - t][i - j]);  //求最小值
+                        }
+                    }
+                }
+            }
+        }
+        cout << dp[(1 << num) - 1][n];      //结果就是集合状态为111……111时合并为n个数的dp，即将num个数合并为n个数后的最小和
+    }
+    return 0;
+}
