@@ -1,0 +1,81 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ 
+const ll mod = 998244353;
+ 
+#define pr pair<ll, ll>
+#define x tmp.first
+#define y tmp.second
+inline pr Exgcd(ll a, ll b)
+{
+    if (b == 0)
+        return pr(1, 0);
+    pr tmp = Exgcd(b, a % b);
+    return pr(y, x - a / b * y);
+}
+inline ll Getans(ll a, ll p)
+{
+    pr tmp = Exgcd(a, p);
+    return (x % p + p) % p;
+}
+ 
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+ 
+    ll n, m;
+    cin >> n >> m;
+ 
+    string s;
+    cin >> s;
+    s = "12" + s;
+    ll ans = 1;
+    bool flag = 1;
+    if (s[2] == '?')
+        flag = 0;
+    for (ll i = 4; i <= n; i++)
+    {
+        if(s[i]=='?')
+            ans *= (i - 2);
+        ans %= mod;
+    }
+    if (flag == 0)
+        cout << 0 << '\n';
+    else
+        cout << ans << '\n';
+    ll pos;
+    char c;
+    while (m--)
+    {
+        cin >> pos >> c;
+        pos += 1;
+        if (pos == 2)
+        {
+            if (c == '?')
+                flag = 0;
+            else
+                flag = 1;
+        }
+        else
+        {
+            if(pos>=4){
+                if(s[pos]=='?'&&c!='?'){
+                    ans *= Getans(pos - 2, mod);
+                    ans %= mod;
+                }
+                else if(s[pos]!='?'&&c=='?'){
+                    ans *= pos - 2;
+                    ans %= mod;
+                }
+                s[pos] = c;
+            }
+        }
+        if (flag == 0)
+            cout << 0 << '\n';
+        else
+            cout << ans << '\n';
+    }
+    return 0;
+}
