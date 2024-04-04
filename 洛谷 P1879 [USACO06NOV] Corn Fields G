@@ -1,0 +1,78 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll m, n;          // m行n列
+vector<ll> s[16]; // 行合法的二进制压缩的状态(状压s)
+ll dp[16][5006];  // dp[i][j]，表示第i行，行状态为j
+ll mp[16][16];    // 记录土地的贫瘠或肥沃
+const ll mod = 1e8;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> m >> n;
+    for (int i = 1; i <= m; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            cin >> mp[i][j];
+        }
+    }
+
+    for (ll i = 0; i < (1 << n); i++) // 枚举二进制状态，从而选取符合条件的状态加入数组s
+    {
+        for (ll j = 1; j <= m; j++)
+        {
+            bool ok = 1;
+            for (ll k = 0; k < n; k++)
+            {
+                if (((i >> k) & 1) == 1 && mp[j][k] == 0) // 如果在贫瘠的土地上种草，则不符合条件
+                {
+                    ok = 0;
+                    break;
+                }
+            }
+            if ((((i >> 1) | (i << 1)) & i) == 0 && ok == 1) // 如果没有相邻（即 左、右 两种相邻关系）的国王，表示该状态在一行中是符合条件的，同时要满足种草的土地是肥沃的
+            {
+                s[j].push_back(i); // 第j行符合条件的状态
+            }
+        }
+    }
+
+    for (ll j = 0; j < s[1].size(); j++)
+    {
+        dp[1][s[1][j]] = 1; // 初始化第一行每种状态的方案数为1
+    }
+
+    for (ll i = 2; i <= m; i++) // 枚举行
+    {
+        for (ll k1 = 0; k1 < s[i].size(); k1++) // 枚举当前行合法的行状态
+        {
+            ll s1 = s[i][k1];
+            for (ll k2 = 0; k2 < s[i - 1].size(); k2++) // 枚举上一行合法的行状态
+            {
+                ll s2 = s[i - 1][k2];
+                if ((s2 & s1) == 0) // 上下不相邻则符合条件
+                {
+                    dp[i][s1] += dp[i - 1][s2];
+                    dp[i][s1] %= mod;
+                }
+            }
+        }
+    }
+
+    ll ans = 0;
+    for (ll i = 0; i < s[m].size(); i++)
+    {
+        ans += dp[m][s[m][i]]; // 统计枚举到最后一行后的符合条件的总方案数量
+        ans %= mod;
+    }
+
+    cout << ans << '\n';
+
+    return 0;
+}
