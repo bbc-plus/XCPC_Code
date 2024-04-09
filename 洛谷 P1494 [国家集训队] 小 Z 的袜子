@@ -1,0 +1,109 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int maxn = 1e5 + 6;
+
+int cnt[maxn];  //记录相同颜色袜子的个数
+ll ans[maxn], ans2[maxn];   //ans[]记录分子，ans[]记录分母
+int sum;    //sum维护当前选取两只相同颜色袜子的方案数
+
+int a[maxn], n, q, bl, curL = 1, curR = 0;
+// bl是分块数量，a[]是原序列，n表示数组大小，q表示询问个数。
+void add(int pos) // 添加
+{
+    sum += cnt[a[pos]]; //每增加一个，从中选取两个的方案数就要加上增加之前的个数
+    cnt[a[pos]]++;
+}
+void del(int pos) // 去除
+{
+    cnt[a[pos]]--;
+    sum -= cnt[a[pos]]; // 每减少一个，从中选取两个的方案数就要减去减少之后的个数
+}
+
+struct query    //询问的结构体
+{
+    int l, r, p;
+} e[maxn];
+
+bool cmp(query a, query b)
+{
+    // 记得在主函数中对bl赋值(bl=sqrt(n))
+    return (a.l / bl) == (b.l / bl) ? a.r < b.r : a.l < b.l;
+}
+
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+/*
+ while (curL < l)del(curL++);
+ while (curL > l)add(--curL);
+ while (curR < r)add(++curR);
+ while (curR > r)del(curR--);
+*/
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> q;
+    bl = sqrt(n);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    for (int i = 1; i <= q; i++)
+    {
+        cin >> e[i].l >> e[i].r;
+        e[i].p = i;
+    }
+    sort(e + 1, e + 1 + q, cmp);
+    for (int i = 1; i <= q; i++)
+    {
+        int l = e[i].l;
+        int r = e[i].r;
+        int p = e[i].p;
+        //莫队四循环
+        while (curL < l)
+            del(curL++);
+        while (curL > l)
+            add(--curL);
+        while (curR < r)
+            add(++curR);
+        while (curR > r)
+            del(curR--);
+        int len = r - l + 1;
+        // zong计算的是从区间中选两只袜子的方案数，而sum维护的是从区间中选两只颜色相同袜子的方案数
+        ll zong = 1ll * len * (len - 1) / 2;    //十年OI一场空，不开longlong见祖宗
+        if (len == 1)
+        {
+            //特判L=R的情况(题目中有特别说明)
+            ans[p] = 0;
+            ans2[p] = 1;
+        }
+        else
+        {
+            //化成最简分数
+            ll yin = gcd(sum, zong);
+            ans[p] = sum / yin;
+            ans2[p] = zong / yin;
+        }
+    }
+    for (int i = 1; i <= q; i++)
+    {
+        cout << ans[i] << '/' << ans2[i] << '\n';
+    }
+
+    return 0;
+}
