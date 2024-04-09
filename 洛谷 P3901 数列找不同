@@ -1,0 +1,101 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e5 + 6;
+
+int cnt[maxn];  //记录某个数出现的次数
+
+int sum, a[maxn], n, q, bl, ans[maxn], curL = 1, curR = 0;
+// sum就是所求答案，bl是分块数量，a[]是原序列，ans[]是记录原查询序列下的答案，n表示数组大小，q表示询问个数。
+
+void add(int pos) // 添加
+{
+    cnt[a[pos]]++;
+    if (cnt[a[pos]] == 1)
+        sum++;  //sum统计的是不同的数的个数，当操作后cnt==1，sum++
+}
+
+void del(int pos) // 去除
+{
+    cnt[a[pos]]--;
+    if (cnt[a[pos]] == 0)
+        sum--;  //sum统计的是不同的数的个数，当操作后cnt==0，sum--
+}
+
+struct query    //询问 结构体
+{
+    int l, r, p;
+} e[maxn];
+
+bool cmp(query a, query b)
+{
+    // 记得在主函数中对bl赋值(bl=sqrt(n))
+    return (a.l / bl) == (b.l / bl) ? a.r < b.r : a.l < b.l;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> q;
+    bl = sqrt(n);   //分块数量的赋值
+    
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    for (int i = 1; i <= q; i++)
+    {
+        cin >> e[i].l >> e[i].r;
+        e[i].p = i; //记录询问的顺序
+    }
+    sort(e + 1, e + 1 + q, cmp);    //对询问进行桶排序
+
+    for (int i = 1; i <= q; i++)
+    {
+        int l = e[i].l;
+        int r = e[i].r;
+        int p = e[i].p;
+        // 莫队
+        while (curL < l)
+        {
+            del(curL);
+            curL++;
+        }
+        while (curL > l)
+        {
+            curL--;
+            add(curL);
+        }
+        while (curR < r)
+        {
+            curR++;
+            add(curR);
+        }
+        while (curR > r)
+        {
+            del(curR);
+            curR--;
+        }
+        if (sum == r - l + 1)   //不同的数个数等于区间长度 则说明区间元素互不相同
+        {
+            ans[p] = 1; //ans[]为1表示该询问中区间元素互不相同
+        }
+    }
+    for (int i = 1; i <= q; i++)
+    {
+        if (ans[i] == 1) 
+        {
+            cout << "Yes" << '\n';
+        }
+        else
+        {
+            cout << "No" << '\n';
+        }
+    }
+
+    return 0;
+}
