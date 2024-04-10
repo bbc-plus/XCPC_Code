@@ -1,0 +1,102 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ 
+// 若R大于12，500⋅π⋅r^2−3^r<0 那么塔楼对敌人的血量削减为负贡献，所以R最大即为12
+// 由于R很小，所以采用状压dp枚举半径分布的子集
+ 
+void solve()
+{
+    int n, m, k;
+    cin >> n >> m >> k;
+    vector<vector<char>> ground(n + 1, vector<char>(m + 1)); // 场地
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            cin >> ground[i][j];
+        }
+    }
+    vector<int> tower_x(k); // 塔楼的纵坐标
+    vector<int> tower_y(k); // 塔楼的横坐标
+    vector<int> p(k);       // 塔楼的攻击参数
+    for (int i = 0; i < k; i++)
+    {
+        cin >> tower_x[i] >> tower_y[i] >> p[i];
+    }
+    vector<vector<int>> cover(k, vector<int>(13)); // 第i+1座塔楼半径为j时覆盖的路径点的数量
+    for (int i = 0; i < k; i++)
+    {
+        for (int j = 1; j <= 12; j++)
+        {
+            int cnt = 0; // 覆盖的路径点的数量
+            int x = tower_x[i];
+            int y = tower_y[i];
+            for (int nx = x - j; nx <= x + j; nx++) // 枚举以塔楼为中心点，2*j+1为边长的正方形
+            {
+                for (int ny = y - j; ny <= y + j; ny++)
+                {
+                    if (nx >= 1 && nx <= n && ny >= 1 && ny <= m)         // 不越界
+                        if (pow(x - nx, 2) + pow(y - ny, 2) <= pow(j, 2)) // 在圆内
+                            if (ground[nx][ny] == '#')                    // 是路径点
+                                cnt++;
+                }
+            }
+            cover[i][j] = cnt;
+        }
+    }
+    // 由于每个r最多对应一个塔楼，所以最多为12个塔楼设置攻击范围
+    int num = 12;
+    vector<vector<int>> dp(k + 1, vector<int>((1 << num), -1e9)); // dp[i][j]表示设置前i个塔楼，半径状态压缩为j时塔楼可造成的最大伤害
+    dp[0][0] = 0;
+    for (int i = 1; i <= k; i++)
+        for (int s = 0; s < (1 << num); s++) // s为上一行的dp状态
+        {
+            dp[i][s] = max(dp[i][s], dp[i - 1][s]);
+            for (int j = 0; j < num; j++)
+            {
+                int s2 = s | (1 << j); // 状态压缩加上该塔楼该半径
+                if (s2 != s)
+                {
+                    dp[i][s2] = max(dp[i][s2], dp[i - 1][s] + cover[i - 1][j + 1] * p[i - 1]);
+                }
+            }
+        }
+    int ans = 0;
+    for (int s = 0; s < (1 << num); s++)
+    {
+        int ex = 0;   // 额外增加的敌人生命值
+        int ppow = 3; // 3的r次方
+        for (int j = 0; j < num; j++)
+        {
+            if ((s >> j) & 1)
+            {
+                ex += ppow;
+            }
+            ppow *= 3;
+        }
+        for (int j = 0; j <= k; j++)
+        {
+            ans = max(ans, dp[j][s] - ex);
+        }
+    }
+    cout << ans << '\n';
+ 
+    return;
+}
+ 
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+ 
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+ 
+    return 0;
+}
