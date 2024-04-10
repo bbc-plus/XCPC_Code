@@ -1,0 +1,97 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int maxn = 2e5; // 数据范围
+// tot为树中元素下标，从1号根节点开始
+int tot, n, m;
+// sum[]表示该节点对应区间的数值个数，rt[]记录历史线段树的根节点，ls记录左儿子，rs记录右二子
+int sum[(maxn << 5) + 10], rt[maxn + 10], ls[(maxn << 5) + 10], rs[(maxn << 5) + 10]; // 左移运算符是为了给记录历史线段树的过程开辟足够多的节点，需根据具体maxn的值修改（一般不必修改）
+// a[]为读入数组，ind[]为离散化后对应元素，len为离散化后元素个数
+int a[maxn + 10], ind[maxn + 10], len;
+
+int getid(const int &val) // 离散化
+{ 
+    return lower_bound(ind + 1, ind + len + 1, val) - ind;
+}
+
+int build(int l, int r) // 建树
+{
+    int root = ++tot;
+    if (l == r)
+        return root;
+    int mid = l + r >> 1;
+    ls[root] = build(l, mid);
+    rs[root] = build(mid + 1, r);
+    return root; // 返回该子树的根节点
+}
+
+int update(int k, int l, int r, int root) // 插入元素
+{
+    int dir = ++tot; // 当前节点下标
+    ls[dir] = ls[root], rs[dir] = rs[root], sum[dir] = sum[root] + 1;
+    if (l == r)
+        return dir;
+    int mid = l + r >> 1;
+    if (k <= mid)
+        ls[dir] = update(k, l, mid, ls[dir]);
+    else
+        rs[dir] = update(k, mid + 1, r, rs[dir]);
+    return dir;
+}
+
+int query(int u, int v, int l, int r, int k) // 查询操作
+{
+    int mid = l + r >> 1,
+        x = sum[ls[v]] - sum[ls[u]]; // 通过区间减法得到左儿子中所存储的数值个数
+    if (l == r)
+        return l;
+    if (k <= x) // 若 k 小于等于 x ，则说明第 k 小的数字存储在在左儿子中
+        return query(ls[u], ls[v], l, mid, k);
+    else // 否则说明在右儿子中
+        return query(rs[u], rs[v], mid + 1, r, k - x);
+}
+
+void init() // 初始化主席树
+{
+    cin >> n >> m;
+    for (int i = 1; i <= n; ++i)
+        cin >> a[i];
+    memcpy(ind, a, sizeof(ind));
+    // 离散化
+    sort(ind + 1, ind + n + 1);                   // 排序
+    len = unique(ind + 1, ind + n + 1) - ind - 1; // 去重，并记录不同元素的个数
+    rt[0] = build(1, len);                        // 建第一个线段树（尚未插入元素）
+    for (int i = 1; i <= n; ++i)
+        rt[i] = update(getid(a[i]), 1, len, rt[i - 1]); // 更新后续一个一个插入元素后的线段树
+}
+
+int l, r, k;
+
+void work() // 回答询问
+{
+    while (m--)
+    {
+        cin >> l >> r >> k;
+        // 返回区间[l,r]中第k小值
+        cout << ind[query(rt[l - 1], rt[r], 1, len, k)] << '\n';
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    init();
+    work();
+
+    return 0;
+}
