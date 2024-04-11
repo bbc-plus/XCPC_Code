@@ -1,0 +1,52 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    vector<ll> dp(m + 1, 0);
+    // 价值，重量，个数
+    ll value, weight, cnt;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> value >> weight >> cnt;
+        vector<ll> tmp;
+        // 二进制分解
+        for (ll j = 1; j <= cnt; j <<= 1)
+        {
+            tmp.push_back(j);
+            cnt -= j;
+        }
+        if (cnt != 0)
+            tmp.push_back(cnt);
+        // 转换成01背包dp
+        for (int k = 0; k < tmp.size(); k++)
+        {
+            for (int j = m; j >= 0; j--)
+            {
+                // 更新价值和重量
+                ll a = value * tmp[k];
+                ll b = weight * tmp[k];
+                if (j >= b)
+                {
+                    dp[j] = max(dp[j], dp[j - b] + a);
+                }
+            }
+        }
+    }
+    cout << dp[m];
+
+    return 0;
+}
