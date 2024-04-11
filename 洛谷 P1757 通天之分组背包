@@ -1,0 +1,51 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int m, n;
+    cin >> m >> n;
+    unordered_map<int, vector<int>> mp; // 离散化分组的存储
+    vector<int> weight(n);
+    vector<int> value(n);
+    int num; // 第几组
+    for (int i = 0; i < n; i++)
+    {
+        cin >> weight[i] >> value[i];
+        cin >> num;
+        mp[num].push_back(i); // 将物品序号保存在所在组内
+    }
+    // dp数组
+    vector<ll> dp(m + 1, 0);
+    // 遍历所有组
+    for (auto it = mp.begin(); it != mp.end(); it++)
+    {
+        num = it->first;
+        // 遍历背包
+        for (int i = m; i >= 0; i--)
+        {
+            // 遍历组内所有物品，以先遍历背包再遍历组内物品的顺序可以保证组内最多选一个物品
+            for (int j = 0; j < mp[num].size(); j++)
+            {
+                int idx = mp[num][j]; // 物品的序号
+                if (i >= weight[idx])
+                {
+                    dp[i] = max(dp[i], dp[i - weight[idx]] + 1ll * value[idx]);
+                }
+            }
+        }
+    }
+    cout << dp[m];
+
+    return 0;
+}
