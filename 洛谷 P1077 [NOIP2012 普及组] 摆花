@@ -1,0 +1,46 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int mod = 1e6 + 7;
+int a[106], dp[106];
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    // ps：这不是妥妥的分组背包吗
+    // 将问题中的第i种花选k个抽象成第i组里的第k个物品
+    // 就可以将问题化为分组背包方案数的计数dp
+    // 最后做好题目中的细节处理即可
+    int n, m;
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    dp[0] = 1;          // 初始化一朵花不选的方案数为1
+    for (int i = 1; i <= n; i++) // 枚举第i种花
+    {
+        for (int j = m; j >= 0; j--) // 枚举背包大小
+        {
+            // 由于规定第i种花不能超过ai盆，所以选取的第i种花的数量k的上界应设置为ai和背包大小的最小值
+            for (int k = 1; k <= min(a[i], j); k++)
+            {
+                dp[j] += dp[j - k];
+                dp[j] %= mod;
+            }
+        }
+    }
+    cout << dp[m];
+
+    return 0;
+}
