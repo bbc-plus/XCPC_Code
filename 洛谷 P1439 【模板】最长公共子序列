@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+int LIS(vector<int> &arr) // 传入数组的下标从1开始
+{
+    int n = arr.size() - 1;
+    // dp记录上升子序列长度为i时最小的末尾元素
+    vector<int> dp(n + 1, -1); // 初始值设置为比数组中最小值小的值，便于更新最小末尾元素
+    dp[1] = arr[1];
+    int len = 1; // 当前最长上升子序列长度
+    for (int i = 2; i <= n; i++)
+    {
+        int l = 0, r = len, mid;
+        if (arr[i] > dp[len])
+            dp[++len] = arr[i];
+        // 如果刚好大于末尾，暂时向后顺次填充
+        else
+        {
+            // 二分查找可更新的位置
+            while (l < r)
+            {
+                mid = (l + r) / 2;
+                if (dp[mid] > arr[i])
+                    r = mid;
+                // 如果仍然小于之前所记录的最小末尾，那么不断向前寻找(因为是最长上升子序列，所以f数组必然满足单调)
+                else
+                    l = mid + 1;
+            }
+            dp[l] = min(arr[i], dp[l]); // 更新最小末尾
+        }
+    }
+    return len; // 返回结果
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n;
+    cin >> n;
+    vector<int> a(n + 1);
+    vector<int> b(n + 1);
+    unordered_map<int, int> mp; // 因为此题的两个数组是全排列，所以可以将P2数组中的数映射为其在P1数组中的下标
+    // 这样就实现了一个转化：
+    // 原来：
+    // P1: 3 2 1 4 5
+    // P2: 1 3 2 4 5
+    // 转化后：
+    // P1: 1 2 3 4 5
+    // P2: 3 1 2 4 5
+    // 那么形成了一个性质：由于P1数组的所有子序列均为上升子序列，所以公共子序列一定为上升子序列
+    // 那么求最长公共子序列LCS 即 求最长上升子序列LIS
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        mp[a[i]] = i;
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> b[i];
+    }
+    vector<int> c(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        c[i] = mp[b[i]];
+    }
+    cout << LIS(c);
+
+    return 0;
+}
