@@ -1,0 +1,78 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+
+char g[106][106];  // 表示田地
+int vis[106][106]; // 记录已访问
+
+struct node
+{
+    int x, y;
+};
+
+// 八个方向
+int dx[8] = {0, 0, 1, 1, 1, -1, -1, -1};
+int dy[8] = {1, -1, 1, -1, 0, 1, -1, 0};
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    // 这个题目其实就是求W连通块的数量（八个方向可连通）
+    // 所以采用bfs可以迅速解决问题
+    int n, m;
+    cin >> n >> m;
+
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            cin >> g[i][j];
+        }
+    }
+    //连通块数量
+    int ans = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            //如果存在没有访问过的有水点，则一定是一个新的连通块
+            if (g[i][j] == 'W' && vis[i][j] == 0)
+            {
+                //记录已访问
+                vis[i][j] = 1;
+                //连通块加加
+                ans++;
+                //以该点为起点队列bfs
+                queue<node> q;
+                q.push({i, j});
+                while (!q.empty())
+                {
+                    node tmp = q.front();
+                    q.pop();
+                    //遍历八个方向
+                    for (int k = 0; k < 8; k++)
+                    {
+                        int nx = tmp.x + dx[k];
+                        int ny = tmp.y + dy[k];
+                        if (g[nx][ny] == 'W' && vis[nx][ny] == 0)
+                        {
+                            vis[nx][ny] = 1;
+                            q.push({nx, ny});
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << ans << '\n';
+
+    return 0;
+}
