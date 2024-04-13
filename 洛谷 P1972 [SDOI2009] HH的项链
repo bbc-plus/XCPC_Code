@@ -1,0 +1,74 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int maxn = 1e6 + 6;
+// 主席树需记录左孩子，右孩子及节点值
+struct node
+{
+    int lc, rc, val;
+} tree[maxn << 5]; // 开树节点空间
+
+int root[maxn]; // 每一棵线段树的根节点
+int idx;        // 当前节点序号
+
+int build(int st, int ed, int root, int x, int f)
+{
+    int now_idx = ++idx;        // 创建新节点
+    tree[now_idx] = tree[root]; // 复制根节点
+    tree[now_idx].val += f;     // f为1则加1，f为-1则减1
+    if (st == ed)
+        return now_idx;
+    int mid = (st + ed) / 2; // 二分建树
+    if (x <= mid)
+        tree[now_idx].lc = build(st, mid, tree[root].lc, x, f);
+    else
+        tree[now_idx].rc = build(mid + 1, ed, tree[root].rc, x, f);
+    return now_idx;
+}
+
+int query(int l, int r, int st, int ed, int root2, int root1)
+{
+    if (l <= st && r >= ed)
+        return tree[root2].val - tree[root1].val; // 第r棵树减去第l-1棵树即为l到r区间的个数
+    int mid = (st + ed) / 2;
+    int ans = 0;
+    if (l <= mid)
+        ans += query(l, r, st, mid, tree[root2].lc, tree[root1].lc);
+    if (r > mid)
+        ans += query(l, r, mid + 1, ed, tree[root2].rc, tree[root1].rc);
+    return ans;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    unordered_map<int, int> mp; // 存储某值上一次出现的位置，没出现时pos为0
+    int n, m;
+    cin >> n;
+    int tmp;                     // 存储读入数据
+    for (int i = 1; i <= n; i++) // 建第i棵线段树
+    {
+        cin >> tmp;
+        root[i] = build(0, n + 6, root[i - 1], mp[tmp], 1);
+        mp[tmp] = i; // 更新tmp的值前一次出现的位置
+    }
+    cin >> m;
+    int l, r;
+    while (m--)
+    {
+        cin >> l >> r;
+        cout << query(0, l - 1, 0, n + 6, root[r], root[l - 1]) << '\n';
+    }
+
+    return 0;
+}
