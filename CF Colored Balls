@@ -1,0 +1,69 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+
+const ll mod = 998244353;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+    //根据题面提示：球的总数不超过5000
+    //可知通过dp统计总和为i的集合个数，进行背包dp的背包容量不超过5000
+    int n;
+    cin >> n;
+    vector<ll> v(n);
+    //统计球总数
+    ll sum = 0;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> v[i];
+        sum += v[i];
+    }
+    //背包dp数组
+    vector<ll> dp(sum + 1, 0);
+    //初始化总和为0的集合个数为1，即空集
+    dp[0] = 1;
+    //dp，统计总和为j的子集个数
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = sum; j >= v[i]; j--)
+        {
+            dp[j] += dp[j - v[i]];
+            dp[j] %= mod;
+        }
+    }
+    //存储答案：颜色组的个数
+    ll ans = 0;
+    //由于每个集合的答案有两种情况：
+    //1.当集合中最大值小于等于集合总和一半时，答案为集合总和sum/2，若有余数则加1
+    //2.当集合中最大值大于集合总和一半，答案为最大值
+    //所以先假定均为情况一，统计所有答案，然后再处理其中情况二
+    for (ll i = 0; i <= sum; i++)
+    {
+        ans += (i + 1) / 2 * dp[i];
+        ans %= mod;
+    }
+    //处理情况二：
+    //枚举第i+1种颜色球的个数
+    for (int i = 0; i < n; i++)
+    {
+        //枚举所有总和小于v[i]的集合的个数，那么该集合再加上v[i]元素的新集合的统计就是情况二
+        //而新集合的答案统计先前假定了情况一，所以需要减去情况一的值即（v[i]+j+1）/2 ，即集合总和除以二加上余数
+        for (int j = 0; j < v[i]; j++)//当遍历所有小于v[i]的集合总和时，就已经确保了除了最大值以外的集合总和小于最大值
+        {
+            //同时答案需统计情况二，即最大值v[i]
+            ans += (v[i] - (v[i] + j + 1) / 2) * dp[j];
+            ans %= mod;
+        }
+    }
+    cout << ans;
+
+    return 0;
+}
