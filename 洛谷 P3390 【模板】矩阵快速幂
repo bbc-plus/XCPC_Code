@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int mod = 1e9 + 7; // 模数
+struct Matrix            // 矩阵结构体
+{
+    ll m[106][106]; // 开longlong
+};
+Matrix a, e; // a输入矩阵，e单位矩阵
+ll n, p;
+Matrix Mul(Matrix x, Matrix y) // 矩阵相乘
+{
+    Matrix res;
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= n; j++)
+            res.m[i][j] = 0;    //非全局定义的变量需初始化
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= n; j++)
+            for (int k = 1; k <= n; k++)
+            {
+                res.m[i][j] += x.m[i][k] * y.m[k][j];
+                res.m[i][j] %= mod;
+            }
+    return res;
+}
+Matrix pow(Matrix x, ll y) // 矩阵快速幂
+{
+    Matrix res = e;
+    while (y)
+    {
+        if (y & 1)
+        {
+            res = Mul(res, x);
+        }
+        x = Mul(x, x);
+        y >>= 1;
+    }
+    return res;
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+    // 输入
+    cin >> n >> p;
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            cin >> a.m[i][j];
+        }
+    }
+    // 单位矩阵初始化
+    for (int i = 1; i <= n; i++)
+    {
+        e.m[i][i] = 1;
+    }
+    Matrix ans = pow(a, p);
+    // 输出
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            if (j != n)
+                cout << (ans.m[i][j] + mod) % mod << ' ';
+            else
+                cout << (ans.m[i][j] + mod) % mod << '\n';
+        }
+    }
+    return 0;
+}
