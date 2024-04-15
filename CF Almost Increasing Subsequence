@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    // 根据题意，几乎递增的序列不包含三个连续元素构成非递增序列
+    // 那么问题可以转化为
+    // 找出给定数组中所有的非递增子数组，其中非递增子数组的长度>2的是不满足条件的
+    // 因此当非递增子数组长度大于2时，只取其首元素和尾元素，去掉内部元素
+    // 那么我们可以通过维护1到i区间内的不满足条件的内部元素个数d[i]
+    // 当查询区间答案时，只需用d[r]减去d[l+1]就是该区间内不满足条件的内部元素个数
+    // 那么一个区间的答案即为区间长度len-(d[r]-d[l+1])
+    // 至于为什么是d[r]-d[l+1]而不是d[r]-d[l-1]，下面给出解释：
+    // 因为不满足条件的内部元素被统计在内的前提条件是至少包含三个元素
+    // 而区间l到r中，位置l和l+1的元素前面只有零个/一个元素，加起来达不到三个元素
+    // 即预处理时在位置l和位置l+1统计的数量在该l,r区间中实际不应当计算在内
+    // 因此减去的应当是d[l+1]而非d[l-1]
+    // 另外需要注意的是：
+    // l与r相等时，不存在l+1位置，则len-(d[r]-d[l+1])公式不适用，应改为len-(d[r]-d[l])
+
+    int n, q;
+    cin >> n >> q;
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    vector<int> d(n + 1, 0);
+    // 预处理1到i区间内的不满足条件的内部元素个数d[i]
+    for (int i = 3; i <= n; i++)
+    {
+        if (a[i - 2] >= a[i - 1] && a[i - 1] >= a[i]) // 存在不满足条件的内部元素时
+        {
+            d[i] = d[i - 1] + 1;
+        }
+        else // 继承
+        {
+            d[i] = d[i - 1];
+        }
+    }
+    int l, r, len;
+    while (q--)
+    {
+        cin >> l >> r;
+        len = r - l + 1;
+        if (len == 1) // 需特判len==1，因为l和r相等时l+1>r，因此不符合
+            cout << len - (d[r] - d[l]) << '\n';
+        // 当然，此时d[r]-d[l]等于0，因此写成cout << 1 << '\n'也是OK的
+        else
+            cout << len - (d[r] - d[l + 1]) << '\n';
+    }
+
+    return 0;
+}
