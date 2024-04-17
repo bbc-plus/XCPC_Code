@@ -1,0 +1,84 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+const int maxn = 1e5 + 6;
+const int maxm = 5e5 + 6;
+
+struct edge
+{
+    int to, len; // to为边的指向，len为边的长度即边权
+};
+
+vector<edge> e[maxn]; // 存储以点i为起点的边
+
+struct node
+{
+    ll dis;                             // dis为目前到该点的最短路长度
+    int num;                            // num为该点序号
+    bool operator>(const node &a) const // 小根堆中的大于号重载
+    {
+        return dis > a.dis;
+    }
+};
+
+ll minDis[maxn];                                      // 从起点到第i个点的最短路长度
+bool vis[maxn];                                       // 第i个点是否已确定最短路长度
+priority_queue<node, vector<node>, greater<node>> pq; // 还未确定最短路长度的点存放在小根堆中
+
+void dijkstra(int n, int s) // n为点的个数，s为起点
+{
+    memset(minDis, 0x3f, sizeof(minDis)); // 将最短路距离初始化为无穷大
+    minDis[s] = 0;                        // 起点到起点的最短路长度为0
+    pq.push({0, s});
+    while (!pq.empty())
+    {
+        int u = pq.top().num; // 有向边的起点
+        pq.pop();
+        if (vis[u]) // 若该点已确定最短路长度，跳过
+            continue;
+        vis[u] = 1;
+        for (edge eg : e[u]) // 遍历以该点为起点的所有有向边
+        {
+            int v = eg.to;
+            int w = eg.len;
+            if (minDis[v] > minDis[u] + w) // 更新最短路长度
+            {
+                minDis[v] = minDis[u] + w;
+                pq.push({minDis[v], v});
+            }
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m, s; // 点的个数，有向边的个数，出发点的编号
+    cin >> n >> m >> s;
+    int u, v, w; // 从u到v的权值为w的有向边
+    while (m--)
+    {
+        cin >> u >> v >> w;
+        e[u].push_back({v, w});
+    }
+    dijkstra(n, s);
+    for (int i = 1; i <= n; i++)
+    {
+        if (i != n)
+            cout << minDis[i] << ' ';
+        else
+            cout << minDis[i] << '\n';
+    }
+
+    return 0;
+}
