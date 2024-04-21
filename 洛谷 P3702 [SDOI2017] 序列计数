@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int mod = 20170408;
+const int maxm = 2e7 + 6;
+int n, m, p;
+ll x[100]; // 对不超过m的所有正整数模p的值计数
+ll y[100]; // 对不超过m的所有非质数模p的值计数
+// 对于枚举到第i个位置的dp，采用滚动数组
+ll dp_x[100]; // 取不超过m的所有正整数时和为i的序列数量
+ll dp_y[100]; // 取不超过m的所有非质数时和为i的序列数量
+// 因此，答案就为dp_x[p%p]-dp_y[p%p]
+bool not_prime[maxm];
+
+void mul(ll a[], ll b[])
+{
+    vector<ll> c(2 * p, 0);
+    for (int i = 0; i < p; i++)
+    {
+        for (int j = 0; j < p; j++)
+        {
+            c[i + j] += a[i] * b[j];
+            c[i + j] % mod;
+        }
+    }
+    for (int i = 0; i < p; i++)
+    {
+        a[i] = (c[i] + c[i + p]) % mod;
+    }
+    return;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> m >> p;
+    // 质数筛
+    not_prime[1] = 1;
+    for (int i = 2; i <= m; i++)
+    {
+        if (!not_prime[i])
+        {
+            for (int j = i * 2; j <= m; j += i)
+            {
+                not_prime[j] = 1;
+            }
+        }
+    }
+    // 在x和y数组中计数
+    for (int i = 1; i <= m; i++)
+    {
+        x[i % p]++;
+        if (not_prime[i])
+            y[i % p]++;
+    }
+    // 和为0的序列数量为1
+    dp_x[0] = 1;
+    dp_y[0] = 1;
+    // 快速幂计算序列数量
+    while (n)
+    {
+        if (n & 1)
+        {
+            mul(dp_x, x);
+            mul(dp_y, y);
+        }
+        mul(x, x);
+        mul(y, y);
+        n >>= 1;
+    }
+    // dp_x[p%p]-dp_y[p%p]即dp_x[0]-dp_y[0]
+    cout << (dp_x[0] - dp_y[0] + mod) % mod << '\n';
+
+    return 0;
+}
