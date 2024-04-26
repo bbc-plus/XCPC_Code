@@ -1,0 +1,88 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e2 + 6;
+const int maxm = 5e5 + 6;
+
+struct edge
+{
+    int to; // to为边的指向
+};
+
+vector<edge> e[maxn]; // 存储以点i为起点的边
+
+int n;
+int sum[maxn];  // 以u为根的子树的带权结点数
+bool vis[maxn]; // 是否已访问过该结点
+int w[maxn];    // 每个点的权值
+int ans[maxn];  // 在第i个结点建立医院后的路程和
+
+void dfs(int u, int depth) // 计算ans[1]，计算所有结点的sum值
+{
+    int cur_sum = w[u]; // 以u为根的子树的带权结点数，初始化为该结点的权值
+    vis[u] = true;      // 记录已访问
+
+    for (int i = 0; i < e[u].size(); i++) // 遍历以u为起点的所有边
+    {
+        int v = e[u][i].to; // 边的终点
+        if (vis[v])
+            continue;
+        dfs(v, depth + 1); // 递归下一层，深度(也就是到医院的距离)要加1
+        cur_sum += sum[v];
+    }
+
+    sum[u] = cur_sum;
+
+    ans[1] += w[u] * depth; // 统计路程和，每个结点要加上 居民人口乘以到医院的距离
+}
+
+void dp(int u)
+{
+    vis[u] = true; // 记录已访问
+
+    for (int i = 0; i < e[u].size(); i++) // 遍历以u为起点的所有边
+    {
+        int v = e[u][i].to; // 边的终点
+        if (vis[v])
+            continue;
+        ans[v] = ans[u] + sum[1] - sum[v] - sum[v]; // 转移方程
+        dp(v);
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n;
+    int a, b;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> w[i] >> a >> b;
+        // 若非0，则用邻接表存储该无向边所对应的两条有向边
+        if (a)
+        {
+            e[i].push_back({a});
+            e[a].push_back({i});
+        }
+        if (b)
+        {
+            e[i].push_back({b});
+            e[b].push_back({i});
+        }
+    }
+    dfs(1, 0);
+    memset(vis, 0, sizeof(vis)); // 记得重置vis数组
+    dp(1);
+    int min_ans = INT_MAX; // 最小距离和，初始化为最大
+    for (int i = 1; i <= n; i++)
+    {
+        min_ans = min(min_ans, ans[i]); // 更新min_ans为所有距离和中最小的
+    }
+    cout << min_ans << '\n';
+
+    return 0;
+}
