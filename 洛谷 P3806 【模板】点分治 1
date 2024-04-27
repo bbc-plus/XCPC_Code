@@ -1,0 +1,168 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e4 + 6;
+const int maxm = 1e2 + 6;
+const int maxk = 1e7 + 6;
+
+int n, m;
+
+struct edge
+{
+    int to; // 边的指向
+    int w;  // 边权
+};
+
+vector<edge> e[maxn];
+
+int _size[maxn];  // 以i为根的子树的结点数
+int max_size;     // 求重心时的删除某结点后剩余子树结点个数的最大值的最小值
+int sum;          // 当前子树的结点数
+int root;         // 当前子树的根
+int del[maxn];    // 处理过的子树的根标记为已删除
+int dis[maxn];    // 以某个点为根时各个点到根节点的距离
+bool judge[maxk]; // 到根节点的距离为i是否存在
+int query[maxm];  // 记录询问
+bool ans[maxm];   // 第i个询问是否可满足
+
+void add_edge(int u, int v, int w) // 加边函数
+{
+    e[u].push_back({v, w});
+}
+
+void get_root(int u, int vis) // 找到重心，以重心为根
+{
+    int cur_max_num = 0;
+    _size[u] = 1;
+    for (int i = 0; i < e[u].size(); i++)
+    {
+        int v = e[u][i].to;
+        if (v == vis || del[v])
+            continue;
+        get_root(v, u);
+        _size[u] += _size[v];
+        cur_max_num = max(cur_max_num, _size[v]);
+    }
+    cur_max_num = max(cur_max_num, sum - _size[u]);
+    if (cur_max_num < max_size)
+    {
+        max_size = cur_max_num;
+        root = u;
+    }
+}
+
+void get_distance(int u, int vis, vector<int> &len) // 求子树中各个点到根节点的距离
+{
+    len.push_back(dis[u]);
+    for (int i = 0; i < e[u].size(); i++)
+    {
+        int v = e[u][i].to;
+        if (v == vis || del[v])
+            continue;
+        dis[v] = dis[u] + e[u][i].w;
+        get_distance(v, u, len);
+    }
+}
+
+void cal_path_length(int u) // 计算路径长度
+{
+    del[u] = 1;   // 记录以u为根的树已经计算过路径
+    judge[0] = 1; // 预处理距离为0存在
+
+    set<int> need_to_clear; // 记录需要清空的judge下标
+
+    for (int i = 0; i < e[u].size(); i++)
+    {
+        int v = e[u][i].to;
+        if (del[v])
+            continue;
+        // 离散化存储该子树中所有距离根结点的路径长度
+        vector<int> len;
+        // 求出子树v的各个结点到根u的距离
+        dis[v] = e[u][i].w;
+        get_distance(v, u, len);
+        // 枚举距离和询问，将各个子树到根u的距离进行组合求和，判断是否存在该询问对应的距离之和
+        for (int j = 0; j < len.size(); j++)
+        {
+            for (int k = 1; k <= m; k++)
+            {
+                if (query[k] >= len[j])
+                {
+                    if (judge[query[k] - len[j]] == 1)
+                        ans[k] = 1;
+                }
+            }
+        }
+        // 记录先前子树到根的距离，用于后续子树与先前子树的组合求和
+        for (int j = 0; j < len.size(); j++)
+        {
+            if (len[j] <= 1e7)
+            {
+                judge[len[j]] = 1;
+                need_to_clear.insert(len[j]);
+            }
+        }
+    }
+    // 清空judge
+    for (set<int>::iterator it = need_to_clear.begin(); it != need_to_clear.end(); it++)
+    {
+        judge[*it] = 0;
+    }
+}
+
+void divide(int u) // 分治
+{
+    cal_path_length(u); // 计算经过根u的所有路径长度
+    // 对u的子树分治
+    for (int i = 0; i < e[u].size(); i++)
+    {
+        int v = e[u][i].to;
+        if (del[v])
+            continue;
+        // 对子树进行分治，要更新sum和max_size为子树的大小
+        sum = _size[v];
+        max_size = _size[v];
+        get_root(v, 0);
+        divide(root);
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> m;
+    int a, b, c; // 连接a和b的边权为c的路径
+    for (int i = 1; i <= n - 1; i++)
+    {
+        cin >> a >> b >> c;
+        add_edge(a, b, c);
+        add_edge(b, a, c);
+    }
+
+    int k;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> k;
+        query[i] = k;
+    }
+
+    sum = n;
+    max_size = n;
+    get_root(1, 0);    // 寻找重心
+    get_root(root, 0); // 通过该重心，更新所有子树的大小
+    divide(root);
+
+    for (int i = 1; i <= m; i++)
+    {
+        if (ans[i])
+            cout << "AYE" << '\n';
+        else
+            cout << "NAY" << '\n';
+    }
+
+    return 0;
+}
