@@ -1,0 +1,159 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e5 + 6;
+const int maxk = 2e5 + 6;
+
+int n, kk;
+
+struct node
+{
+    int x, y, z;
+    int w;   // 权值，其值表示的是该元素的重复数量
+    int ans; // 统计有多少个x,y,z均小于等于本元素的元素数量
+    bool operator==(const node &a) const
+    {
+        return x == a.x && y == a.y && z == a.z;
+    }
+    void operator=(const node &a)
+    {
+        x = a.x;
+        y = a.y;
+        z = a.z;
+        w = a.w;
+        ans = a.ans;
+    }
+};
+
+node b[maxn]; // 输入的元素数组
+node a[maxn]; // 去重后的元素数组
+
+int cnt[maxk]; // 统计答案个数
+
+int tr[maxn]; // 树状数组
+
+int lowbit(int x) // 获取低位2次幂数
+{
+    return x & -x;
+}
+
+void update(int x, int k) // 单点修改
+{
+    while (x <= kk)
+    {
+        tr[x] += k;
+        x += lowbit(x);
+    }
+}
+
+int query(int x) // 前缀和查询
+{
+    int res = 0;
+    while (x)
+    {
+        res += tr[x];
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+bool cmp_x(node a, node b)
+{
+    if (a.x == b.x)
+        if (a.y == b.y)
+            return a.z < b.z;
+        else
+            return a.y < b.y;
+    else
+        return a.x < b.x;
+}
+
+bool cmp_y(node a, node b)
+{
+    if (a.y == b.y)
+        if (a.z == b.z)
+            return a.x < b.x;
+        else
+            return a.z < b.z;
+    else
+        return a.y < b.y;
+}
+
+void cdq(int l, int r)
+{
+    if (l == r)
+        return;
+    int mid = (l + r) >> 1;
+    cdq(l, mid);
+    cdq(mid + 1, r);
+
+    // 按第二维排序
+    sort(a + l, a + mid + 1, cmp_y);
+    sort(a + mid + 1, a + r + 1, cmp_y);
+
+    // 双指针，j指向前一半，i指向后一半
+    int j = l;
+    for (int i = mid + 1; i <= r; i++)
+    {
+        while (a[j].y <= a[i].y && j <= mid)
+        {
+            update(a[j].z, a[j].w);
+            j++;
+        }
+        a[i].ans += query(a[i].z);
+    }
+    // 清空树状数组
+    for (int i = l; i < j; i++)
+    {
+        update(a[i].z, -a[i].w);
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> kk;
+
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> b[i].x >> b[i].y >> b[i].z;
+        b[i].w = 1;
+        b[i].ans = 0;
+    }
+    // 按第一维排序
+    sort(b + 1, b + 1 + n, cmp_x);
+
+    // 去重，将b数组转化为a数组，同时更新n的值
+    int last_n = n;
+    int new_n = 0;
+    for (int i = 1; i <= last_n; i++)
+    {
+        if (b[i] == b[i - 1]) // 结构体中已重载==运算符
+        {
+            a[new_n].w++;
+        }
+        else
+        {
+            new_n++;
+            a[new_n] = b[i]; // 结构体中已重载=运算符
+        }
+    }
+    n = new_n; // 更新n的值为去重后数组即a数组的大小
+
+    cdq(1, n); // 分治喵
+
+    for (int i = 1; i <= n; i++)
+    {
+        cnt[a[i].ans + a[i].w - 1] += a[i].w; // 按照题目要求统计数量
+    }
+    for (int i = 0; i < last_n; i++)
+    {
+        cout << cnt[i] << '\n';
+    }
+
+    return 0;
+}
