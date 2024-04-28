@@ -1,0 +1,70 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 5e5 + 6;
+
+int n, m; // n为数组大小，m为询问个数
+
+int a[maxn]; // 原数组
+int s[maxn]; // 树状数组
+
+int lowbit(int x) // 获取低位2次幂数
+{
+    return x & -x;
+}
+
+void change(int x, int k) // 单点修改
+{
+    while (x <= n)
+    {
+        s[x] += k;
+        x += lowbit(x);
+    }
+}
+
+int query(int x) // 前缀和查询
+{
+    int res = 0;
+    while (x)
+    {
+        res += s[x];
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n >> m;
+
+    int x, y, k, op;
+
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+
+    while (m--)
+    {
+        cin >> op;
+        if (op == 1)
+        {
+            cin >> x >> y >> k;
+            // 差分
+            change(x, k);
+            change(y + 1, -k);
+        }
+        else
+        {
+            cin >> x;
+            cout << a[x] + query(x) << '\n'; // 原值加上变化的值
+        }
+    }
+
+    return 0;
+}
