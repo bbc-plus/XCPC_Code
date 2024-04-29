@@ -1,0 +1,156 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e5 + 6;
+
+int n, num_z;
+
+struct node
+{
+    int x, y, z; // 套娃大小
+    ll w;        // 该套娃重量
+    ll ans;      // 里面能套多少重量
+};
+
+node a[maxn]; // 读入的元素数组
+
+ll tr[maxn]; // 树状数组
+
+int lowbit(int x) // 获取低位2次幂数
+{
+    return x & -x;
+}
+
+void update(int x, ll k) // 单点修改
+{
+    while (x <= num_z)
+    {
+        tr[x] = max(tr[x], k);
+        x += lowbit(x);
+    }
+}
+
+void clean(int x) // 清空树状数组
+{
+    while (x <= kk)
+    {
+        tr[x] = 0;
+        x += lowbit(x);
+    }
+}
+
+ll query(int x) // 前缀和查询
+{
+    ll res = 0;
+    while (x)
+    {
+        res = max(res, tr[x]);
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+bool cmp_x(node a, node b)
+{
+    if (a.x == b.x)
+        if (a.y == b.y)
+            return a.z < b.z;
+        else
+            return a.y < b.y;
+    else
+        return a.x < b.x;
+}
+
+bool cmp_y(node a, node b)
+{
+    if (a.y == b.y)
+        if (a.z == b.z)
+            return a.x < b.x;
+        else
+            return a.z < b.z;
+    else
+        return a.y < b.y;
+}
+
+void cdq(int l, int r)
+{
+    // 保证第一维严格小于
+    if (a[l].x == a[r].x)
+        return;
+    int mid = (l + r) >> 1;
+    while (mid > l && a[mid].x == a[mid + 1].x)
+        mid--;
+    // 优先分治左区间，把小的里面能套的先套了
+    cdq(l, mid);
+
+    // 看大的能不能套小的
+    // 按第二维排序
+    sort(a + l, a + mid + 1, cmp_y);
+    sort(a + mid + 1, a + r + 1, cmp_y);
+
+    // 双指针，j指向前一半，i指向后一半
+    int j = l;
+    for (int i = mid + 1; i <= r; i++)
+    {
+        while (a[j].y < a[i].y && j <= mid)
+        {
+            update(a[j].z, a[j].ans + a[j].w);
+            j++;
+        }
+        a[i].ans = max(a[i].ans, query(a[i].z - 1));
+    }
+    // 清空树状数组
+    for (int i = l; i < j; i++)
+    {
+        clean(a[i].z);
+    }
+
+    // 最后分治右区间，看大的能不能套大的
+    sort(a + mid + 1, a + r + 1, cmp_x); // 由于前面cmp_y已经打乱了x，这边右区间分治要再次cmp_x
+    cdq(mid + 1, r);
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    cin >> n;
+    set<int> s;                 // 去重
+    unordered_map<int, int> mp; // 离散化
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i].x >> a[i].y >> a[i].z >> a[i].w;
+        s.insert(a[i].z);
+        a[i].ans = 0;
+    }
+    // 树状数组的上界num_z
+    num_z = s.size();
+    // 离散化
+    int idx = 1;
+    for (auto it = s.begin(); it != s.end(); it++, idx++)
+    {
+        mp[*it] = idx;
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        a[i].z = mp[a[i].z];
+    }
+    // 按第一维排序
+    sort(a + 1, a + 1 + n, cmp_x);
+
+    cdq(1, n); // 分治喵
+
+    // 找到最重的一个套娃
+    ll max_weight = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        max_weight = max(max_weight, a[i].ans + a[i].w);
+    }
+
+    cout << max_weight << '\n';
+
+    return 0;
+}
