@@ -1,0 +1,84 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+#define INF 1e9 // 无穷大
+const int maxn = 1e5 + 6;
+int n;
+string s;               // 节点类型
+vector<int> edge[maxn]; // 存储从根节点指向子节点的有向边
+int dp[maxn][3];        // dp[i][0]表示不接触水流，dp[i][1]表示只接触红色水流，dp[i][2]表示只接触蓝色水流
+
+void dfs(int u)
+{
+    dp[u][0] = INF; // 初始化为无穷大，便于dp求三种情况最小值
+    if (s[u] != 'S')
+        dp[u][1] = 0;
+    else
+        dp[u][1] = INF; // 若该节点产生蓝色水流，则无法做到只接触红色水流
+    if (s[u] != 'P')
+        dp[u][2] = 0;
+    else
+        dp[u][2] = INF; // 若该节点产生红色水流，则无法做到只接触蓝色水流
+    int tot = 0;
+    for (int v : edge[u])
+    {
+        // 深搜，dp从叶子节点往根节点转移
+        dfs(v);
+        dp[u][1] = dp[u][1] + min({dp[v][1], dp[v][2] + 1, dp[v][0]}); // 只接触红色水流所需墙壁和，三种情况，其中只有子节点为蓝色水流需要加一个墙壁
+        dp[u][2] = dp[u][2] + min({dp[v][2], dp[v][1] + 1, dp[v][0]}); // 只接触蓝色水流所需墙壁和，三种情况，其中只有子节点为红色水流需要加一个墙壁
+        tot += dp[v][0];                                               // 无水流经过所需墙壁和
+    }
+    if (s[u] != 'C') // 如果不为'C'，则该节点本身能产生水流，所以tot赋值无穷大，表示无法无水流
+        tot = INF;
+    dp[u][0] = min({tot, dp[u][1] + 1, dp[u][2] + 1}); // 该节点无水流的情况有三种：来者无水流，有水流+1个墙壁
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    // 本题策略：将'S'类比蓝色水流，将'P'类比红色水流，它们从叶子节点往根节点流，目的是设置最少墙壁使得蓝色水流和红色水流不交汇
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        cin >> n;
+        // 记得清空之前测试中的边
+        for (int i = 1; i <= n; i++)
+        {
+            edge[i].clear();
+        }
+
+        int v;
+        for (int i = 2; i <= n; i++)
+        {
+            cin >> v;
+            edge[v].push_back(i);
+        }
+
+        cin >> s;
+        // 补充无关元素，使下标从1开始一一对应节点
+        s = '0' + s;
+
+        dfs(1);
+
+        // 取三者最小值
+        int ans = INT_MAX;
+        for (int i = 0; i < 3; i++)
+        {
+            ans = min(ans, dp[1][i]);
+        }
+        cout << ans << '\n';
+    }
+
+    return 0;
+}
