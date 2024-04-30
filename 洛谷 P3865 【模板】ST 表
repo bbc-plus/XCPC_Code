@@ -1,0 +1,31 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int f[100005][22]; // f[i][j]表示以第i个数为起点，长度为2^j的区间中的最大值
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+
+    for (int i = 1; i <= n; i++) // 长度为2^0即1的区间中的最大值即为该数本身，直接读入
+        cin >> f[i][0];
+    for (int j = 1; j <= 20; j++)                   // 枚举区间长度，注意随着数据变大，j上限也要变大
+        for (int i = 1; i + (1 << j) - 1 <= n; i++) // 枚举起点
+            f[i][j] = max(f[i][j - 1], f[i + (1 << (j - 1))][j - 1]);
+
+    int l, r;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> l >> r;
+        int k = log2(r - l + 1); // 区间长度的指数
+        cout << max(f[l][k], f[r - (1 << k) + 1][k]) << '\n';
+    }
+
+    return 0;
+}
