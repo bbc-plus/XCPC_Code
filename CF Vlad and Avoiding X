@@ -1,0 +1,107 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define max_Heap(x) priority_queue<x, vector<x>, less<x>>
+#define min_Heap(x) priority_queue<x, vector<x>, greater<x>>
+typedef long long ll;
+typedef unsigned long long ull;
+typedef pair<int, int> PII;
+typedef pair<long long, long long> PLL;
+const double PI = acos(-1);
+
+char g[7][7];
+
+struct node
+{
+    int x, y;
+};
+
+bool check(int valid_num) // 检查该种翻转方案是否可行
+{
+    for (int i = 1; i < 6; i++)
+    {
+        for (int j = 1; j < 6; j++)
+        {
+            if (valid_num != ((i + j) % 2)) // 不属于该板块的点就跳过
+                continue;
+            if (g[i][j] && g[i - 1][j - 1] && g[i - 1][j + 1] && g[i + 1][j - 1] && g[i + 1][j + 1]) // 一旦发现x图形，返回0，该方案不可行
+                return 0;
+        }
+    }
+    return 1;
+}
+
+bool dfs(vector<node> &v, int cnt_left, int idx, int valid_num) // v为对应板块的'B'所在的点的数组，cnt_left为剩下需要翻转的次数，idx为数组的索引，valid_num表示奇数板块还是偶数板块
+{
+    if (cnt_left == 0)
+        return check(valid_num); // 翻转次数用完后，检查是否可行
+    if (idx == v.size())         // idx遍历完数组仍未找到可行方案，返回0
+        return 0;
+    bool ok = 0;
+    ok |= dfs(v, cnt_left, idx + 1, valid_num);     // 该点不翻转，递归下一个点
+    g[v[idx].x][v[idx].y] ^= 1;                     // 翻转
+    ok |= dfs(v, cnt_left - 1, idx + 1, valid_num); // 该点翻转，递归下一个点
+    g[v[idx].x][v[idx].y] ^= 1;                     // 回溯
+    return ok;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            for (int j = 0; j < 7; j++)
+            {
+                char c;
+                cin >> c;
+                g[i][j] = (c == 'B'); // 将'B'用1存储，便于操作，相对应的，0表示'W'
+            }
+        }
+        // 将7X7的板块分为两个互不影响的板块
+        vector<node> a, b;
+        for (int i = 0; i < 7; i++)
+        {
+            for (int j = 0; j < 7; j++)
+            {
+                if (g[i][j])
+                {
+                    if ((i + j) % 2 == 0)
+                    {
+                        a.push_back({i, j}); // 加入偶数板块
+                    }
+                    else
+                    {
+                        b.push_back({i, j}); // 加入奇数板块
+                    }
+                }
+            }
+        }
+        int ans = 0;
+        // 最多只要翻转4个点即可令其不存在x图形
+        for (int i = 0; i <= 4; i++)
+        {
+            if (dfs(a, i, 0, 0))
+            {
+                ans += i;
+                break;
+            }
+        }
+        for (int i = 0; i <= 4; i++)
+        {
+            if (dfs(b, i, 0, 1))
+            {
+                ans += i;
+                break;
+            }
+        }
+        cout << ans << '\n';
+    }
+
+    return 0;
+}
