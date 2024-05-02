@@ -1,0 +1,89 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+struct DSU
+{
+    std::vector<int> f, siz;
+
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+
+    void init(int n)
+    {
+        f.resize(n);
+        std::iota(f.begin(), f.end(), 0);
+        siz.assign(n, 1);
+    }
+
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+
+    bool same(int x, int y)
+    {
+        return find(x) == find(y);
+    }
+
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+
+    int size(int x)
+    {
+        return siz[find(x)];
+    }
+};
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    DSU dsu = DSU(n);
+    int z, x, y;
+    while (m--)
+    {
+        cin >> z >> x >> y;
+        // 并查集结构体内部下标从0开始，题目要求从1开始，所以需要--来统一下标
+        x--;
+        y--;
+        if (z == 1)
+        {
+            dsu.merge(x, y);
+        }
+        else
+        {
+            if (dsu.same(x, y))
+            {
+                cout << "Y\n";
+            }
+            else
+            {
+                cout << "N\n";
+            }
+        }
+    }
+
+    return 0;
+}
