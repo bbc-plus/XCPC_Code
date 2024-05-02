@@ -1,0 +1,95 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+struct DSU
+{
+    std::vector<int> f, siz;
+
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+
+    void init(int n)
+    {
+        f.resize(n);
+        std::iota(f.begin(), f.end(), 0);
+        siz.assign(n, 1);
+    }
+
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+
+    bool same(int x, int y)
+    {
+        return find(x) == find(y);
+    }
+
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+
+    int size(int x)
+    {
+        return siz[find(x)];
+    }
+};
+
+struct operation // 公路修复的结构体
+{
+    int x, y, t; // t时刻在x和y之间修复公路
+};
+
+bool cmp(operation a, operation b) // 按t排序
+{
+    return a.t < b.t;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    DSU dsu = DSU(n);
+    vector<operation> v(m);
+    for (int i = 0; i < m; i++)
+    {
+        cin >> v[i].x >> v[i].y >> v[i].t;
+        // 并查集结构体中下标从0开始，题目从1开始，所以通过--操作来对应下标
+        v[i].x--;
+        v[i].y--;
+    }
+    sort(v.begin(), v.end(), cmp); // 按t排序
+    for (int i = 0; i < m; i++)
+    {
+        dsu.merge(v[i].x, v[i].y); // 合并
+        if (dsu.size(v[i].x) == n) // 该次合并操作后集合大小达到n，则任意两个村庄可通车
+        {
+            cout << v[i].t;
+            return 0;
+        }
+    }
+    cout << -1; // 无法连通所有村庄，输出-1
+
+    return 0;
+}
