@@ -1,0 +1,70 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int MAX = 1e6 + 6;
+int Next[MAX];
+vector<int> ans;
+inline void GetNext(string s, int l) // 获得字符串s的Next数组
+{
+    int t;
+    Next[0] = -1;               // 如果在0位置失配则是向下移动一位
+    for (int i = 1; i < l; ++i) // 依次求解后面的Next数组
+    {
+        t = Next[i - 1];
+        while (s[t + 1] != s[i] && t >= 0)
+            t = Next[t];
+        if (s[t + 1] == s[i])
+            Next[i] = t + 1;
+        else
+            Next[i] = -1;
+    }
+}
+inline void KMP(string s1, int l1, string s2, int l2)
+{
+    GetNext(s2, l2);
+    int i = 0, j = 0;
+    while (j < l1)
+    {
+        if (s2[i] == s1[j]) // 当前位匹配成功，继续匹配下一位
+        {
+            ++i;
+            ++j;
+            if (i == l2) // 完全匹配
+            {
+                ans.push_back(j - l2 + 1); // 储存答案
+                i = Next[i - 1] + 1;       // 继续匹配
+            }
+        }
+        else
+        {
+            if (i == 0) // 在首位不匹配
+                j++;
+            else
+                i = Next[i - 1] + 1;
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    string s1, s2;
+    cin >> s1 >> s2;
+    int l1 = s1.size();
+    int l2 = s2.size();
+    KMP(s1, l1, s2, l2);
+    for (int i = 0; i < ans.size(); i++)
+    {
+        cout << ans[i] << '\n';
+    }
+    for (int i = 0; i < l2; i++)
+    {
+        cout << Next[i] + 1 << ' ';
+    }
+
+    return 0;
+}
