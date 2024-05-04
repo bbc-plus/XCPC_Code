@@ -1,0 +1,67 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n, q;
+        cin >> n >> q;
+        vector<int> a(n + 1);
+        for (int i = 1; i <= n; i++)
+        {
+            cin >> a[i];
+        }
+        // b数组为a的前缀位异或
+        vector<int> b(n + 1, 0);
+        // 用map离散存储等于某值的所有索引位置
+        map<int, vector<int>> idx;
+        idx[0].push_back(0);
+        for (int i = 1; i <= n; i++)
+        {
+            b[i] = b[i - 1] ^ a[i];
+            idx[b[i]].push_back(i);
+        }
+        // 处理询问
+        int l, r;
+        while (q--)
+        {
+            cin >> l >> r;
+            // 假如k=2，则需要b[l-1]^b[t]==b[t]^b[r]即b[l-1]==b[r]
+            if (b[l - 1] == b[r])
+            {
+                cout << "YES" << '\n';
+                continue;
+            }
+            // 假如k=3，则需要b[l-1]^b[s]==b[s]^b[t]==b[t]^b[r]即b[l-1]==b[t]且b[s]==b[r]
+            // 问题转化为找出两点s,t满足l<=s<t<r，b[l-1]==b[t]且b[s]==b[r]
+            // 二分查找值等于b[r]中的大于l-1位置的位置
+            int s = lower_bound(idx[b[r]].begin(), idx[b[r]].end(), l) - idx[b[r]].begin();
+            if (s == idx[b[r]].size() || idx[b[r]][s] >= r) // 没找到或者找到的位置大于等于r，都不满足
+            {
+                cout << "NO" << '\n';
+                continue;
+            }
+            // 既然已找到s的位置，那么二分查找值等于b[l-1]中的大于s位置的位置
+            int t = lower_bound(idx[b[l - 1]].begin(), idx[b[l - 1]].end(), idx[b[r]][s] + 1) - idx[b[l - 1]].begin();
+            if (t == idx[b[l - 1]].size() || idx[b[l - 1]][t] >= r) // 没找到或者找到的位置大于等于r，都不满足
+            {
+                cout << "NO" << '\n';
+            }
+            else
+            {
+                cout << "YES" << '\n';
+            }
+        }
+        cout << '\n';
+    }
+
+    return 0;
+}
