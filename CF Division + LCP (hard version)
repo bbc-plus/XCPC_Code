@@ -1,0 +1,104 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int MAX = 2e5 + 6;
+int ans[MAX];
+vector<int> z_function(string s) // z函数
+{
+    int n = (int)s.length();
+    vector<int> z(n);
+    for (int i = 1, l = 0, r = 0; i < n; ++i)
+    {
+        if (i <= r && z[i - l] < r - i + 1)
+        {
+            z[i] = z[i - l];
+        }
+        else
+        {
+            z[i] = max(0, r - i + 1);
+            while (i + z[i] < n && s[z[i]] == s[i + z[i]])
+                ++z[i];
+        }
+        if (i + z[i] - 1 > r)
+            l = i, r = i + z[i] - 1;
+    }
+    return z;
+}
+int f(vector<int> &z, int len) // 计算len长度前缀在字符串中的数量
+{
+    int n = z.size();
+    int cnt = 1;
+    for (int i = len; i < n;)
+    {
+        if (z[i] >= len)
+            cnt++, i += len;
+        else
+            i++;
+    }
+    return cnt;
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n, Left, Right;
+        cin >> n >> Left >> Right;
+        string s;
+        cin >> s;
+        vector<int> z = z_function(s);
+        // 分两种情况处理
+        // 先处理k>√n
+        // 对于k>√n，由于k*LCP<=n，所以LCP<=√n，于是就可以处理每个<=√n的LCP，找到对应可满足的最大的k
+        for (int len = ceil(sqrt(n)); len >= 1; len--)
+        {
+            int num = f(z, len);
+            ans[num] = max(ans[num], len);
+        }
+        // 由可满足的最大的k的LCP来更新较小的k的LCP
+        for (int i = n - 1; i >= 1; i--)
+        {
+            ans[i] = max(ans[i], ans[i + 1]);
+        }
+        // 再处理k≤√n
+        for (int k = 1; k <= ceil(sqrt(n)); k++)
+        {
+            int l = 0, r = n / k;
+            while (l < r)
+            {
+                int mid = (l + r + 1) / 2; // 这里要 l + r +1 要不然会死循环
+                if (f(z, mid) >= k)
+                {
+                    l = mid; // mid这个位置 满足条件之后 查找 [mid , right]的位置， 所以l移到mid的位置
+                }
+                else
+                {
+                    r = mid - 1; // [mid,r] 不满足条件， 所以要移到满足条件的一方， r = mid - 1
+                }
+            }
+            // 最后的l,r是答案
+            ans[k] = l;
+        }
+        // 输出答案
+        for (int i = Left; i <= Right; i++)
+        {
+            if (i == Right)
+                cout << ans[i] << '\n';
+            else
+                cout << ans[i] << ' ';
+        }
+        // 清空该测试用例的ans
+        for (int i = 1; i <= n; i++)
+        {
+            ans[i] = 0;
+        }
+    }
+
+    return 0;
+}
