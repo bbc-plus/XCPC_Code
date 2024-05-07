@@ -1,0 +1,79 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+vector<int> Next[5006]; // 正向图，记录每个点的后继节点
+vector<int> Pre[5006];  // 反向图，记录每个点的前驱节点
+
+bool vis[5006]; // 记录该节点是否已经访问过
+
+int dfs_next(int v)
+{
+    int res = 0;
+    for (int i = 0; i < Next[v].size(); i++)
+    {
+        int u = Next[v][i]; // 后继节点
+        if (vis[u])         // 若已访问则跳过
+            continue;
+        vis[u] = 1; // 标记为已访问
+        res += dfs_next(u);
+        res++; // 加上该节点本身
+    }
+    return res;
+}
+
+int dfs_pre(int v)
+{
+    int res = 0;
+    for (int i = 0; i < Pre[v].size(); i++)
+    {
+        int u = Pre[v][i]; // 前驱节点
+        if (vis[u])        // 若已访问则跳过
+            continue;
+        vis[u] = 1; // 标记为已访问
+        res += dfs_pre(u);
+        res++; // 加上该节点本身
+    }
+    return res;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int a, b, n, m;
+    cin >> a >> b >> n >> m;
+    int x, y;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> x >> y;
+        Next[x].push_back(y);
+        Pre[y].push_back(x);
+    }
+    int ans1 = 0;               // 对于晋升a个节点，ans1为确定晋升的节点数量
+    int ans2 = 0;               // 对于晋升b个节点，ans2为确定晋升的节点数量
+    for (int i = 0; i < n; i++) // 第i个节点
+    {
+        memset(vis, 0, sizeof(vis)); // 清空标记已访问的数组
+        int num = dfs_next(i);       // 在i节点后面的节点数量
+        if (num >= n - a)            // 若在该节点后面的节点数量大于等于不晋升的节点数量，那该节点必须晋升
+            ans1++;
+        if (num >= n - b) // 若在该节点后面的节点数量大于等于不晋升的节点数量，那该节点必须晋升
+            ans2++;
+    }
+    int ans3 = 0;               // 对于晋升b个节点，ans3为确定不会晋升的节点数量
+    for (int i = 0; i < n; i++) // 第i个节点
+    {
+        memset(vis, 0, sizeof(vis)); // 清空标记已访问的数组
+        int num = dfs_pre(i);        // 在i节点前面的节点数量
+        if (num >= b)                // 若已有b个及以上的节点在其前面，那其必不会晋升
+            ans3++;
+    }
+    cout << ans1 << '\n';
+    cout << ans2 << '\n';
+    cout << ans3 << '\n';
+
+    return 0;
+}
