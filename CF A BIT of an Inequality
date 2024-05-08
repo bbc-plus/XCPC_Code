@@ -1,0 +1,70 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e5 + 6;
+const int maxbit = 30;
+
+// 第i个元素，第j+1个bit位，前缀以及后缀异或结果为k(0或1)
+int prefix[maxn][maxbit][2]; // 该条件下 包含第i-1个元素的前缀的个数
+int suffix[maxn][maxbit][2]; // 该条件下 包含第i+1个元素的后缀的个数
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n;
+        cin >> n;
+        vector<int> a(n + 1);
+        for (int i = 1; i <= n; i++)
+        {
+            cin >> a[i];
+        }
+        // dp转移
+        for (int j = 0; j < 30; j++)
+        {
+            // 初始化
+            prefix[0][j][0] = 0;
+            prefix[0][j][1] = 0;
+            suffix[n + 1][j][0] = 0;
+            suffix[n + 1][j][1] = 0;
+            for (int i = 1; i <= n; i++)
+            {
+                int bit = (a[i] >> j) & 1; // 第j+1个bit位是1或是0
+                for (int k = 0; k <= 1; k++)
+                {
+                    prefix[i][j][k] = (bit == k) + prefix[i - 1][j][k ^ bit];
+                }
+            }
+            for (int i = n; i >= 1; i--)
+            {
+                int bit = (a[i] >> j) & 1; // 第j+1个bit位是1或是0
+                for (int k = 0; k <= 1; k++)
+                {
+                    suffix[i][j][k] = (bit == k) + suffix[i + 1][j][k ^ bit];
+                }
+            }
+        }
+        ll ans = 0; // 统计个数
+        for (int i = 1; i <= n; i++)
+        {
+            int highbit = -1; // 当前元素bit位为1的最高位置
+            for (int j = 0; j < 30; j++)
+            {
+                if ((a[i] >> j) & 1)
+                    highbit = j;
+            }
+            ans += 1LL * prefix[i - 1][highbit][1] * (suffix[i + 1][highbit][0] + 1);
+            ans += 1LL * (prefix[i - 1][highbit][0] + 1) * suffix[i + 1][highbit][1];
+        }
+        cout << ans << '\n';
+    }
+
+    return 0;
+}
