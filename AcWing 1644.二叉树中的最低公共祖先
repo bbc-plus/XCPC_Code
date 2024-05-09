@@ -1,0 +1,173 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e4 + 6;
+
+vector<int> e[maxn];    // 以第i个节点为起点的有向边
+int depth[maxn];        // 第i个节点的深度
+int ancestor[maxn][23]; // ancestor[i][j]表示节点i的2^j级祖先
+int lg[maxn];           // 预处理第i个节点的lg值
+
+void add(int x, int y) // 加有向边函数
+{
+    e[x].push_back(y);
+}
+
+void dfs(int u, int fath) // dfs计算深度和祖先
+{
+    ancestor[u][0] = fath;                                    // 第1级祖先即为父亲
+    depth[u] = depth[fath] + 1;                               // 深度为父亲深度+1
+    for (int j = 1; j <= lg[depth[u]]; j++)                   // 计算该节点的2^j级祖先
+        ancestor[u][j] = ancestor[ancestor[u][j - 1]][j - 1]; // 祖先的转移方程，u的2^j祖先等于u的2^(j-1)祖先的2^(j-1)祖先
+    for (int i = 0; i < e[u].size(); i++)                     // 递归子节点
+    {
+        int v = e[u][i];
+        if (fath != v)
+            dfs(v, u);
+    }
+}
+
+map<int, int> idx; // 离散化后的下标
+map<int, int> num; // 下标所对应的原来的值
+
+void LCA(int x, int y) // 计算x和y的LCA
+{
+    // 将x和y先记录下来，便于输出答案
+    int u = x;
+    int v = y;
+    // 将x和y转化为离散后的下标
+    x = idx[x];
+    y = idx[y];
+    bool tag = 0;            // 记录是否发生了交换
+    if (depth[x] < depth[y]) // 让x为深度更大(或相等)的那一个
+    {
+        swap(x, y);
+        tag = 1;
+    }
+    while (depth[x] > depth[y]) // 将x提到与y相同深度
+        x = ancestor[x][lg[depth[x] - depth[y]] - 1];
+    if (x == y)
+    {
+        if (tag == 0)
+            cout << v << " is an ancestor of " << u << "." << '\n';
+        else
+            cout << u << " is an ancestor of " << v << "." << '\n';
+        return;
+    }
+    for (int k = lg[depth[x]] - 1; k >= 0; k--) // 倍增跳跃
+        if (ancestor[x][k] != ancestor[y][k])
+            x = ancestor[x][k], y = ancestor[y][k];
+    cout << "LCA of " << u << " and " << v << " is " << num[ancestor[x][0]] << "." << '\n';
+    return;
+}
+
+map<int, int> mp;
+int lc[maxn];
+int rc[maxn];
+int traversal(int pre_st, int pre_end, int in_st, int in_end, vector<int> &in, vector<int> &pre)
+{
+    int cur_len = pre_end - pre_st; // 当前区间长度
+    if (cur_len == 0)
+        return 0;
+    int root = pre[pre_st]; // 找到根节点
+    if (cur_len == 1)
+        return root;
+    int pos = mp[root];    // 根位置
+    int len = pos - in_st; // 左子树长度
+    // 递归构造左子树和右子树
+    lc[root] = traversal(pre_st + 1, pre_st + len + 1, in_st, pos, in, pre);
+    rc[root] = traversal(pre_st + len + 1, pre_end, pos + 1, in_end, in, pre);
+    return root;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m, root; // 节点个数，询问个数，根节点
+    cin >> m >> n;
+    vector<int> in(n);
+    vector<int> pre(n);
+    map<int, bool> exist; // 记录某点是否存在
+    // 中序序列
+    for (int i = 0; i < n; i++)
+    {
+        cin >> in[i];
+        exist[in[i]] = 1;
+    }
+    // 离散化各个点为1~n
+    int i = 1;
+    for (auto it = exist.begin(); it != exist.end(); it++, i++)
+    {
+        idx[it->first] = i;
+        num[i] = it->first;
+    }
+    // 将中序序列改为离散后的下标
+    for (int i = 0; i < n; i++)
+    {
+        in[i] = idx[in[i]];
+    }
+    // 记录在中序序列中的位置
+    for (int i = 0; i < n; i++)
+    {
+        mp[in[i]] = i;
+    }
+    // 前序序列
+    for (int i = 0; i < n; i++)
+    {
+        cin >> pre[i];
+    }
+    // 将前序序列改为离散后的下标
+    for (int i = 0; i < n; i++)
+    {
+        pre[i] = idx[pre[i]];
+    }
+    // 构造二叉树
+    root = traversal(0, n, 0, n, in, pre);
+    // 记录树中的边
+    for (int i = 1; i <= n; i++)
+    {
+        if (lc[i] != 0)
+        {
+            add(i, lc[i]);
+            add(lc[i], i);
+        }
+        if (rc[i] != 0)
+        {
+            add(i, rc[i]);
+            add(rc[i], i);
+        }
+    }
+    // 预处理每个深度值的lg值
+    for (int i = 1; i <= n; ++i)
+        lg[i] = lg[i - 1] + (1 << lg[i - 1] == i); // 非常厉害的转移方程
+    // 预处理节点i的2^j级祖先
+    dfs(root, 0);
+    // 处理询问
+    int x, y;
+    for (int i = 1; i <= m; ++i)
+    {
+        cin >> x >> y;
+        if (exist[x] == 0 && exist[y] == 0)
+        {
+            cout << "ERROR: " << x << " and " << y << " are not found." << '\n';
+        }
+        else if (exist[x] == 0)
+        {
+            cout << "ERROR: " << x << " is not found." << '\n';
+        }
+        else if (exist[y] == 0)
+        {
+            cout << "ERROR: " << y << " is not found." << '\n';
+        }
+        else
+        {
+            LCA(x, y);
+        }
+    }
+
+    return 0;
+}
