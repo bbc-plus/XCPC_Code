@@ -1,0 +1,100 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+void set_zero(int l, int r, vector<int> &a, vector<pair<int, int>> &ans)
+{
+    for (int i = l; i <= r; i++)
+    {
+        if (a[i] != 0)
+        {
+            ans.push_back({i, i});
+        }
+    }
+}
+
+void set_max(int l, int r, vector<pair<int, int>> &ans)
+{
+    if (l == r)
+    {
+        ans.push_back({l, r});
+        return;
+    }
+    for (int k = r - 1; k >= l; k--)
+    {
+        set_max(l, k, ans);
+        if (k != l)
+            ans.push_back({l, k - 1});
+    }
+    ans.push_back({l, r});
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    // 对于任意一段区间[l,r]，我们总能进行一系列操作，使该区间的和为 (r-l+1)*(r-l+1)
+    // 所以，由于数组的长度最大为18，我们可以通过二进制枚举所有对区间操作的方案数，找到使得和最大的其中一种方案
+    int n;
+    cin >> n;
+    vector<int> a(n);
+    for (auto &x : a)
+        cin >> x;
+    vector<pair<int, int>> op;         // 记录和最大时需要操作的区间
+    int max_sum = 0;                   // 记录最大和
+    for (int i = 0; i < (1 << n); i++) // 二进制枚举所有区间操作方案，连续的一段1是需要进行区间操作的
+    {
+        ll sum = 0;                 // 当前方案的总和
+        vector<pair<int, int>> tmp; // 当前方案需要操作的区间
+        for (int j = 0; j < n;)
+        {
+            if ((i >> j) & 1)
+            {
+                int l = j;
+                int r = j;
+                r++;
+                while (r < n && ((i >> r) & 1)) // 找到连续的一段1
+                {
+                    r++;
+                }
+                tmp.push_back({l, r - 1});
+                sum += (r - l) * (r - l); // 找到的区间为[l,r)
+                j = r;
+            }
+            else
+            {
+                sum += a[j];
+                j++;
+            }
+        }
+        if (sum > max_sum)
+        {
+            op = tmp;
+            max_sum = sum;
+        }
+    }
+    cout << max_sum << ' '; // 输出最大和
+
+    // 那么下面的任务就是输出实现这种方案的所需操作
+    vector<pair<int, int>> ans; // 记录所需操作
+    // 先将区间元素全部置0
+    for (int i = 0; i < op.size(); i++)
+    {
+        set_zero(op[i].first, op[i].second, a, ans);
+    }
+    // 再将区间元素全部化为r-l+1
+    for (int i = 0; i < op.size(); i++)
+    {
+        set_max(op[i].first, op[i].second, ans);
+    }
+    // 输出操作
+    cout << ans.size() << '\n';
+    for (int i = 0; i < ans.size(); i++)
+    {
+        cout << ans[i].first + 1 << ' ' << ans[i].second + 1 << '\n';
+    }
+
+    return 0;
+}
