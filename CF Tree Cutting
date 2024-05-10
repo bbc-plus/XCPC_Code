@@ -1,0 +1,86 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 1e5 + 6;
+vector<int> e[maxn]; // 存边
+
+int n, k;
+
+void add(int a, int b)
+{
+    e[a].push_back(b);
+}
+
+int cnt; // 剪边后每个剩余的连接部分的大小为至少为x时的连通块的最大数量
+int dfs(int u, int fath, int target)
+{
+    int cur_num = 1; // 当前子树大小
+    for (int i = 0; i < e[u].size(); i++)
+    {
+        int v = e[u][i];
+        if (v != fath)
+        {
+            cur_num += dfs(v, u, target); // 递归，并记录当前子树剩余大小(部分块会在递归后被剪掉)
+        }
+    }
+    if (cur_num >= target) // 贪心，一旦大小大于等于x即目标大小，则将其剪掉
+    {
+        cnt++;
+        return 0; // 已经剪掉该子树，返回大小0
+    }
+    return cur_num;
+}
+
+bool check(int x)
+{
+    cnt = 0;
+    dfs(1, 0, x);
+    if (cnt >= k + 1) // 连通块的最大数量大于等于k+1时，才能满足剪k条边时每个剩余的连接部分的大小为至少为x
+        return true;
+    else
+        return false;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        cin >> n >> k;
+        for (int i = 1; i <= n; i++) // 清空上一次测试中的边
+        {
+            e[i].clear();
+        }
+        int v, u;
+        for (int i = 1; i <= n - 1; i++) // 邻接表加边
+        {
+            cin >> v >> u;
+            add(v, u);
+            add(u, v);
+        }
+        // 二分查找满足条件的最大x
+        int l = 0, r = n + 6;
+        while (l < r)
+        {
+            int mid = (l + r + 1) / 2; // 这里要 l + r +1 要不然会死循环
+            if (check(mid))            // check函数自己写
+            {
+                l = mid;
+            }
+            else
+            {
+                r = mid - 1; // [mid,r] 不满足条件， 所以要移到满足条件的一方， r = mid - 1
+            }
+        }
+        // 最后的l,r是答案 因为 l == r
+        cout << l << '\n';
+    }
+
+    return 0;
+}
