@@ -1,0 +1,68 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 2e5 + 6;
+vector<int> e[maxn];        // 邻接表存边
+vector<pair<int, int>> num; // num.first为路径上的节点个数，num.second为该路径需要计算多少次
+
+void dfs(int p, int fa, int depth)
+{
+    if (p != 1 && e[p].size() <= 1) // 找到叶子节点
+    {
+        if (depth >= 3)
+        {
+            num.push_back({depth, 1});
+        }
+        return;
+    }
+    int child_num = 0;                    // 支链数量，即孩子数量
+    for (int i = 0; i < e[p].size(); i++) // 树的递归遍历
+    {
+        int v = e[p][i];
+        if (v != fa)
+        {
+            dfs(v, p, depth + 1);
+            child_num++;
+        }
+    }
+    if (depth >= 3) // 去重
+    {
+        num.push_back({-depth, child_num - 1}); // 加入num数组数指定为-depth，为的是做个标记
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    ll n;
+    cin >> n;
+    for (int i = 1; i < n; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        // 存无向边
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+    dfs(1, 0, 1);
+    // 先计算总方案数C(n,3)
+    ll ans = n * (n - 1) * (n - 2) / 6;
+    for (int i = 0; i < num.size(); i++)
+    {
+        ll x = num[i].first;
+        if (x > 0) // 若为正数，表示这是叶子节点到根节点的路径中选取学生的方案数
+            ans -= x * (x - 1) * (x - 2) / 6;
+        else // 标记为负数，表示这是要去重的路径中选取学生的方案数
+        {
+            x = -x;
+            ans += x * (x - 1) * (x - 2) / 6 * (ll)num[i].second;
+        }
+    }
+    cout << ans;
+
+    return 0;
+}
