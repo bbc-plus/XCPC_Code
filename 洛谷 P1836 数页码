@@ -1,0 +1,42 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll dp[20][200], a[20];
+ll dfs(int num, ll sum, int top) // num为此时的位置，sum代表此时的数位和，top判断是否前面所有数都取到了上界
+{
+    if (num == 0) // 到达最后一位，统计此时答案
+        return sum;
+    if (!top && dp[num][sum] != -1) // 不是位于上界
+        return dp[num][sum];
+    int bound = top ? a[num] : 9;
+    ll res = 0;
+    for (int i = 0; i <= bound; i++)
+        res += dfs(num - 1, sum + i, top & (i == bound));
+    if (!top)
+        dp[num][sum] = res;
+    return res;
+}
+ll solve(int x) // 记得开long long
+{
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int len = 0;
+    while (x)
+    {
+        a[++len] = x % 10;
+        x /= 10;
+    }
+    return dfs(len, 0, 1);
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n;
+    cin >> n;
+    cout << solve(n);
+
+    return 0;
+}
