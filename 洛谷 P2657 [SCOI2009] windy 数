@@ -1,0 +1,56 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int mod = 2e9 + 6; // 本题无用，仅是因为懒得删（）
+
+int dp[20][20], a[20];                             // dp记录[pos][pre_num]状态下的满足条件的个数，a[]记录数字串
+int dfs(int pos, int pre_num, bool bound, bool st) // pos为此时的位置，pre_num为上一位的数字，bound表示前面每一位是否都是上界，st表示是否前面全是0
+{
+    if (pos == 0) // 枚举完每一位时返回
+        return 1;
+    if (!bound && dp[pos][pre_num] != -1) // 不是位于上界，就可以利用前面dfs已经求出的答案（！=-1表示前面已经求出该答案）
+        return dp[pos][pre_num];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = 9;
+    int res = 0; // 统计此时的答案
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (abs(i - pre_num) >= 2)
+        {
+            if (st && i == 0) // 如果前面全是0并且该位也是0，那么pre_num依旧设置为-6，表示后面接任意数字都不受“相邻两个数字之差至少为2”这个限制
+                res = (res + dfs(pos - 1, -6, bound && (i == a[pos]), 1)) % mod;
+            else
+                res = (res + dfs(pos - 1, i, bound && (i == a[pos]), 0)) % mod;
+        }
+    }
+    if (!bound && !st) // 没在边界时，记录下该状态对应的答案
+        dp[pos][pre_num] = res;
+    return res;
+}
+int solve(int x)
+{
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int len = 0;                // 数字长度
+    while (x)
+    {
+        a[++len] = x % 10;
+        x /= 10;
+    }
+    return dfs(len, -6, 1, 1); // pre_num设置为-6，表示后面接任意数字都不受“相邻两个数字之差至少为2”这个限制
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int a, b;
+    cin >> a >> b;
+    cout << solve(b) - solve(a - 1); // ans[a,b]即为ans[0,b]-ans[0,a-1]
+
+    return 0;
+}
