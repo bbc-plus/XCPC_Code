@@ -1,0 +1,58 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll dp[20][20];                                               // dp记录[pos][sum]状态下的满足条件的个数
+int a[20];                                                   // a[]记录数字串
+ll dfs(int pos, int sum, int digit, bool bound, bool lead_0) // pos为此时的位置，sum表示dfs到状态下的digit个数，digit表示对应数字，bound表示前面每一位是否都是上界，lead_0表示是否前面全是0
+{
+    if (pos == 0) // 枚举完每一位时返回
+        return sum;
+    if (!bound && dp[pos][sum] != -1)
+        return dp[pos][sum];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = 9;
+    ll res = 0; // 统计此时的答案
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (lead_0 && i == 0)
+            res = (res + dfs(pos - 1, sum, digit, bound && (i == a[pos]), 1));
+        else
+            res = (res + dfs(pos - 1, sum + (i == digit), digit, bound && (i == a[pos]), 0));
+    }
+    if (!bound && !lead_0) // 没在边界时，记录下该状态对应的答案
+        dp[pos][sum] = res;
+    return res;
+}
+ll solve(ll x, int digit)
+{
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int len = 0;                // 数字长度
+    while (x)
+    {
+        a[++len] = x % 10;
+        x /= 10;
+    }
+    return dfs(len, 0, digit, 1, 1);
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    ll l, r;
+    cin >> l >> r;
+    for (int i = 0; i <= 9; i++) // 逐个处理0~9
+    {
+        if (i != 9)
+            cout << solve(r, i) - solve(l - 1, i) << ' ';
+        else
+            cout << solve(r, i) - solve(l - 1, i) << '\n';
+    }
+
+    return 0;
+}
