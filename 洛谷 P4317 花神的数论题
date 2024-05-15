@@ -1,0 +1,59 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int mod = 1e7 + 7;
+
+int dp[56][56];                                     // dp记录[pos][cnt1]状态下对答案的贡献
+int a[56];                                          // a[]记录二进制串
+int dfs(int pos, int cnt1, bool bound, bool lead_0) // pos为此时的位置，cnt1为前面1的数量，bound表示前面每一位是否都是上界，lead_0表示是否前面全是0
+{
+    if (pos == 0) // 枚举完每一位时返回
+    {
+        if (lead_0 == 1) // 如果此时lead_0为1，说明该数为0，则返回1（即返回无效贡献）
+            return 1;
+        else
+            return cnt1;
+    }
+    if (!bound && dp[pos][cnt1] != -1) // 读取记忆(doge
+        return dp[pos][cnt1];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = 1;
+    int res = 1;
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (lead_0 && i == 0)
+            res = (1LL * res * dfs(pos - 1, 0, bound && (i == a[pos]), 1)) % mod;
+        else
+            res = (1LL * res * dfs(pos - 1, cnt1 + (i == 1), bound && (i == a[pos]), 0)) % mod;
+    }
+    if (!bound && !lead_0) // 没在边界时，记录下该状态对应的答案，记忆化
+        dp[pos][cnt1] = res;
+    return res;
+}
+int solve(ll x)
+{
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int len = 0;
+    while (x)
+    {
+        a[++len] = x % 2;
+        x /= 2;
+    }
+    return dfs(len, 0, 1, 1);
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    ll x;
+    cin >> x;
+    cout << solve(x);
+
+    return 0;
+}
