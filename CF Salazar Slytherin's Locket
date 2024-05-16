@@ -1,0 +1,68 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll dp[66][3000][16];                                      // dp记录[pos][mask][b]状态下对答案的贡献
+int a[66];                                                // a[]记录b进制串
+ll dfs(int pos, int mask, int b, bool bound, bool lead_0) // pos为此时的位置，mask表示0~b-1的出现次数的状态压缩，b表示进制数，bound表示前面每一位是否都是上界，lead_0表示是否前面全是0
+{
+    if (pos == 0) // 枚举完每一位时返回
+    {
+        if (lead_0 == 1)
+            return 1; // 因为不统计数0，所以返回1还是返回0不影响结果
+        else
+        {
+            if (mask == 0) // 如果最后所有0~b-1所有数都出现偶数（即全为0），则是符合条件的数字
+                return 1;
+            else
+                return 0;
+        }
+    }
+    if (!bound && !lead_0 && dp[pos][mask][b] != -1) // 读取记忆(doge
+        return dp[pos][mask][b];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = b - 1;
+    ll res = 0;
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (lead_0 && i == 0)
+            res += dfs(pos - 1, 0, b, bound && (i == a[pos]), 1);
+        else
+            res += dfs(pos - 1, mask ^ (1 << i), b, bound && (i == a[pos]), 0); // mask^(1<<i)是计算出现次数的核心，0表示数i出现偶数，1表示数i出现奇数
+    }
+    if (!bound && !lead_0) // 没在边界时，记录下该状态对应的答案，记忆化
+        dp[pos][mask][b] = res;
+    return res;
+}
+ll solve(ll x, int b)
+{
+    int len = 0;
+    while (x)
+    {
+        a[++len] = x % b;
+        x /= b;
+    }
+    return dfs(len, 0, b, 1, 1);
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int q;
+    cin >> q;
+    int b;
+    ll l, r;
+    while (q--)
+    {
+        cin >> b >> l >> r;
+        cout << solve(r, b) - solve(l - 1, b) << '\n';
+    }
+
+    return 0;
+}
