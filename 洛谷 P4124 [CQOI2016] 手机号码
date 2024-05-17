@@ -1,0 +1,55 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+ll dp[16][16][16][2][2][2]; // dp记录[pos][last][llast][exist_4][exist_8][ok]状态下对答案的贡献
+int a[16];                  // a[]记录数字串
+// pos为此时的位置，last为上一位的数，llast为上上一位的数，exist_4表示4是否存在，exist_8表示8是否存在，ok表示当前是否存在连续三位相同，bound表示前面每一位是否都是上界，lead_0表示是否前面全是0
+ll dfs(int pos, int last, int llast, int exist_4, int exist_8, int ok, bool bound, bool lead_0)
+{
+    if (exist_4 && exist_8) // 同时存在4和8直接返回0
+        return 0;
+    if (pos == 0) // 枚举完每一位时返回
+        return ok;
+    if (!bound && !lead_0 && dp[pos][last][llast][exist_4][exist_8][ok] != -1) // 读取记忆(doge
+        return dp[pos][last][llast][exist_4][exist_8][ok];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = 9;
+    ll res = 0;
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (lead_0 && i == 0)
+            res += dfs(pos - 1, i, last, exist_4 || (i == 4), exist_8 || (i == 8), ok, bound && (i == a[pos]), 1);
+        else
+            res += dfs(pos - 1, i, last, exist_4 || (i == 4), exist_8 || (i == 8), ok || (last == llast && i == last), bound && (i == a[pos]), 0);
+    }
+    if (!bound && !lead_0) // 没在边界时，记录下该状态对应的答案，记忆化
+        dp[pos][last][llast][exist_4][exist_8][ok] = res;
+    return res;
+}
+ll solve(ll x)
+{
+    int len = 0;
+    while (x)
+    {
+        a[++len] = x % 10;
+        x /= 10;
+    }
+    return dfs(len, -1, -1, 0, 0, 0, 1, 1);
+}
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    ll l, r;
+    cin >> l >> r;
+    cout << solve(r) - solve(l - 1) << '\n';
+
+    return 0;
+}
