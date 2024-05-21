@@ -1,0 +1,87 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const ll mod = 998244353;
+int k;                              // 条件：不超过k个不同数字
+pair<int, int> dp[20][1 << 12][12]; // dp记录[pos][mask][last]状态下的满足条件的个数
+int a[20];                          // a[]记录数字串
+
+// 检查此时是否超过了k个不同数字
+bool check(ll mask)
+{
+    int tot = 0;
+    for (int i = 0; i <= 9; i++)
+    {
+        if ((mask >> i) & 1)
+            tot++;
+    }
+    if (tot > k)
+        return 0;
+    else
+        return 1;
+}
+
+// 进行答案的运算
+void add(pair<int, int> &res, pair<int, int> dfs_ret, int num, int pos)
+{
+    res.first += dfs_ret.first;
+    res.first %= mod;
+
+    res.second += 1ll * dfs_ret.first % mod * num % mod * ((ll)pow(10, pos) % mod) % mod;
+    res.second %= mod;
+    res.second += dfs_ret.second;
+    res.second %= mod;
+}
+
+// pos为此时的位置，mask是对0~10各个数是否存在的状态压缩，last记录上一个数，bound表示前面每一位是否都是上界，lead_0表示是否前面全是0
+pair<int, int> dfs(int pos, ll mask, int last, bool bound, bool lead_0) // pair<int,int>的first记录当前方案数，second记录当前总和
+{
+    if (!check(mask))
+        return {0, 0};
+    if (pos == 0)                                             // 枚举完每一位时返回
+        return {1, last};                                     // 方案数+1，总和+last
+    if (!bound && !lead_0 && dp[pos][mask][last].first != -1) // 读取记忆(doge
+        return dp[pos][mask][last];
+    int max_num; // 可枚举的该位的数的上界
+    if (bound)
+        max_num = a[pos];
+    else
+        max_num = 9;
+    pair<int, int> res = {0, 0}; // 统计方案数和总和
+    for (int i = 0; i <= max_num; i++)
+    {
+        if (lead_0 && i == 0)
+            add(res, dfs(pos - 1, mask, last, bound && (i == a[pos]), 1), 0, 0);
+        else
+            add(res, dfs(pos - 1, mask | (1 << i), i, bound && (i == a[pos]), 0), last, pos);
+    }
+    if (!bound && !lead_0) // 没在边界时，记录下该状态对应的答案，记忆化
+        dp[pos][mask][last] = res;
+    return res;
+}
+
+int solve(ll x)
+{
+    int len = 0; // 数字长度
+    while (x)
+    {
+        a[++len] = x % 10;
+        x /= 10;
+    }
+    return dfs(len, 0, 0, 1, 1).second;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    ll l, r;
+    cin >> l >> r >> k;
+    cout << ((solve(r) - solve(l - 1)) % mod + mod) % mod << '\n';
+
+    return 0;
+}
