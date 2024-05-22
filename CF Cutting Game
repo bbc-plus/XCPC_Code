@@ -1,0 +1,92 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int a, b, n, m;
+        cin >> a >> b >> n >> m;
+        vector<pair<int, int>> ver(n), hor(n); // 竖直上单调的数组，水平上单调的数组
+        for (int i = 0; i < n; i++)
+        {
+            cin >> ver[i].first >> ver[i].second;
+            hor[i] = ver[i];
+        }
+        auto hor_cmp = [](pair<int, int> a, pair<int, int> b)
+        {
+            return a.second < b.second;
+        };
+        sort(ver.begin(), ver.end());          // 按x值升序的坐标数组
+        sort(hor.begin(), hor.end(), hor_cmp); // 按y值升序的坐标数组
+        int ans_Alice = 0, ans_Bob = 0;
+        map<pair<int, int>, bool> del;                     // 记录是否已经删除该坐标，避免水平和竖直删除时重复计数
+        int up = 0, down = n - 1, left = 0, right = n - 1; // 当前在相应数组中的索引的上界，下界，左界，右界
+        int a_up = 1, a_down = a, b_left = 1, b_right = b; // 当前网格的上界，下界，左界，右界
+        auto add = [&](int x, int y, int i)
+        {
+            if (!del[{x, y}])
+            {
+                if (i & 1) // 奇数是Alice下的棋
+                    ans_Alice++;
+                else
+                    ans_Bob++;
+                del[{x, y}] = 1; // 记录已删除该筹码
+            }
+        };
+        char c;
+        int k;
+        for (int i = 1; i <= m; i++)
+        {
+            cin >> c >> k;
+            switch (c)
+            {
+            case 'U':
+                a_up += k;                                 // 边界收缩
+                while (up <= down && ver[up].first < a_up) // 用单调数组上的边界索引找到所有该步棋中被移除的筹码
+                {
+                    add(ver[up].first, ver[up].second, i); // 为棋手加分
+                    up++;                                  // 删去边界筹码后双指针收缩
+                }
+                break;
+            case 'D':
+                a_down -= k;
+                while (up <= down && ver[down].first > a_down)
+                {
+                    add(ver[down].first, ver[down].second, i);
+                    down--;
+                }
+                break;
+            case 'L':
+                b_left += k;
+                while (left <= right && hor[left].second < b_left)
+                {
+                    add(hor[left].first, hor[left].second, i);
+                    left++;
+                }
+                break;
+            case 'R':
+                b_right -= k;
+                while (left <= right && hor[right].second > b_right)
+                {
+                    add(hor[right].first, hor[right].second, i);
+                    right--;
+                }
+                break;
+            default:
+                cout << "ERROR!" << '\n';
+                break;
+            }
+        }
+        cout << ans_Alice << ' ' << ans_Bob << '\n';
+    }
+
+    return 0;
+}
