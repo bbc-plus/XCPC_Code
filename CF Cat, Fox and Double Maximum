@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n;
+        cin >> n;
+        vector<int> p(n);
+        for (int i = 0; i < n; i++)
+        {
+            cin >> p[i];
+        }
+        int n_pos = find(p.begin(), p.end(), n) - p.begin();
+        vector<int> q(n);
+        // 注意，由于我从下标0开始读入数据，所以在下面的描述中，0,2,4,6……是奇数位，而1,3,5,7……是偶数位
+        if (n_pos & 1) // 如果值n在偶数位上，则将p排列翻转，使其变为奇数位上
+        {
+            reverse(p.begin(), p.end());
+        }
+        // n在偶数位和n在奇数位的情况最终都转化为n在奇数位的处理
+        vector<pair<int, int>> even, odd; // 记录值和位置的数组
+        // 先处理偶数位，偶数位需得到1~n/2，小的值交给大的
+        for (int i = 1; i < n; i += 2)
+        {
+            even.push_back({p[i], i});
+        }
+        sort(even.begin(), even.end(), greater<pair<int, int>>());
+        // 按小值交给大值的顺序赋值1~n/2
+        for (int i = 0; i < n / 2; i++)
+        {
+            q[even[i].second] = i + 1;
+        }
+        // 再处理奇数位，奇数位的第一位得到n/2+1，剩余位得到n/2+2~n，大的值交给小的
+        for (int i = 0; i < n; i += 2)
+        {
+            odd.push_back({p[i], i});
+        }
+        sort(odd.begin() + 1, odd.end(), greater<pair<int, int>>());
+        // 按大值交给小值的顺序赋值n/2+1~n
+        for (int i = 0; i < n / 2; i++)
+        {
+            q[odd[i].second] = i + n / 2 + 1;
+        }
+        // 若之前翻转过p，则再翻转一次结果q就能得到所需答案
+        if (n_pos & 1)
+        {
+            reverse(q.begin(), q.end());
+        }
+        for (int i = 0; i < n; i++)
+        {
+            cout << q[i] << " \n"[i == n - 1]; // 新学到的小寄巧()
+        }
+    }
+
+    return 0;
+}
