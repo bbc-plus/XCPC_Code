@@ -1,0 +1,72 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const ll mod = 1e9 + 7;
+
+ll dp[32][2][2][2];                                      // dp记录[pos][bound_a][bound_b][lead_0]状态下的满足条件的个数
+int a[32];                                               // a[]记录二进制串x
+int b[32];                                               // b[]记录二进制串y
+ll dfs(int pos, bool bound_a, bool bound_b, bool lead_0) // pos为此时的位置，bound_a,bound_b表示前面每一位是否都是上界，lead_0表示是否前面全是0
+{
+    if (pos == 0) // 枚举完每一位时返回
+        return 1;
+    if (dp[pos][bound_a][bound_b][lead_0] != -1) // 读取记忆(doge
+        return dp[pos][bound_a][bound_b][lead_0];
+    int a_max_num, b_max_num; // 可枚举的该位的数的上界
+    if (bound_a)
+        a_max_num = a[pos];
+    else
+        a_max_num = 1;
+    if (bound_b)
+        b_max_num = b[pos];
+    else
+        b_max_num = 1;
+    ll res = 0; // 统计此时的答案
+    for (int i = 0; i <= a_max_num; i++)
+    {
+        for (int j = 0; j <= b_max_num; j++)
+        {
+            if (i && j) // 二者均为1时贡献为0，不统计
+                continue;
+            ll num = 1;             // num表示lg(i+j)+1的值(此处的i,j是题目算式中的i,j，而非循环变量i,j)
+            if (lead_0 && (i || j)) // 只有最高位的1会对lg(i+j)+1的结果产生影响，即结果为最高位的1的pos
+                num = pos;
+            res += num * dfs(pos - 1, bound_a && (a_max_num == i), bound_b && (b_max_num == j), lead_0 && (!i) && (!j));
+            res %= mod;
+        }
+    }
+    dp[pos][bound_a][bound_b][lead_0] = res; // 记忆化
+    return res;
+}
+ll solve(ll x, ll y)
+{
+    memset(dp, -1, sizeof(dp)); // 将dp数组初始化为-1，表示对应状态的答案目前还未计算出
+    int len = 0;                // 数字长度
+    while (x || y)
+    {
+        a[++len] = x % 2;
+        b[len] = y % 2;
+        x /= 2;
+        y /= 2;
+    }
+    return dfs(len, 1, 1, 1);
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        ll x, y;
+        cin >> x >> y;
+        cout << ((solve(x, y) - 1) % mod + mod) % mod << '\n'; // 两个数为0,0的情况在计算中被统计，事实上不应被统计，因此要减去1
+    }
+
+    return 0;
+}
