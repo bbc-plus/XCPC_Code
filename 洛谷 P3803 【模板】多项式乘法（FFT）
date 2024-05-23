@@ -1,0 +1,100 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+// NTT的特殊要求:模数P需满足P=k*2^m+1，例如常用的模数998244353=7*17*2^23+1
+const int Mod = 998244353;
+const int G = 3; // 998244353的原根为3
+const int maxn = 1e6 + 6;
+
+int QuickPow(int a, int k)
+{
+    int ret = 1;
+    while (k)
+    {
+        if (k & 1)
+            ret = 1LL * ret * a % Mod;
+        a = 1LL * a * a % Mod;
+        k >>= 1;
+    }
+    return ret;
+}
+
+int rev[3 * maxn];
+inline void GetReverse(int len, int lg)
+{
+    for (int i = 0; i < len; i++)
+        rev[i] = 0;
+    for (int i = 0; i < len; i++)
+        rev[i] = (rev[i >> 1] >> 1) | ((i & 1) << (lg - 1));
+}
+void NTT(vector<int> &a, int dir)
+{
+    int len = a.size();
+    for (int i = 0; i < len; i++)
+        if (i < rev[i])
+            swap(a[i], a[rev[i]]);
+    int g = (dir == 1 ? G : QuickPow(G, Mod - 2));
+    for (int stp = 1; stp < len; stp <<= 1)
+    {
+        int wn = QuickPow(g, (Mod - 1) / (stp << 1));
+        int w = 1;
+        for (int k = 0; k < stp; k++)
+        {
+            for (int even = k; even < len; even += stp << 1)
+            {
+                int odd = even + stp;
+                int tmp = 1LL * w * a[odd] % Mod;
+                a[odd] = (a[even] - tmp + Mod) % Mod;
+                a[even] = (ll)(a[even] + tmp) % Mod;
+            }
+            w = 1LL * w * wn % Mod;
+        }
+    }
+    if (dir == -1)
+    {
+        int inv = QuickPow(len, Mod - 2);
+        for (int i = 0; i < len; i++)
+            a[i] = 1LL * a[i] * inv % Mod;
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    int lg = 0;
+    int bound = 1;
+    while (bound <= n + m)
+    {
+        bound <<= 1;
+        lg++;
+    }
+    GetReverse(bound, lg);
+    vector<int> f(bound, 0), g(bound, 0);
+    for (int i = 0; i <= n; i++)
+    {
+        cin >> f[i];
+    }
+    for (int i = 0; i <= m; i++)
+    {
+        cin >> g[i];
+    }
+    NTT(f, 1);
+    NTT(g, 1);
+    for (int i = 0; i < bound; i++)
+    {
+        f[i] = (1LL * f[i] * g[i]) % Mod;
+    }
+    NTT(f, -1);
+    for (int i = 0; i <= n + m; i++)
+    {
+        cout << f[i] << ' ';
+    }
+
+    return 0;
+}
