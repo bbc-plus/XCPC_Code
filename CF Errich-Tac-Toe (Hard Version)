@@ -1,0 +1,81 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<vector<char>> v(n, vector<char>(n));
+    int k = 0; //'O'或'X'标记的总个数
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            cin >> v[i][j];
+            if (v[i][j] != '.')
+                k++;
+        }
+    }
+    vector<vector<char>> ans; // 当找到满足条件的(a,b)对时，存储下替换后的答案
+    int a, b;                 //(a,b)对用来表示(0,1),(1,2),(2,0)对
+    auto cfg = [&](vector<vector<char>> g) -> bool
+    {
+        int cnt = 0;
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < n; j++)
+            {
+                if (g[i][j] == 'X' && (i + j) % 3 == a)
+                {
+                    g[i][j] = 'O';
+                    cnt++;
+                }
+                if (g[i][j] == 'O' && (i + j) % 3 == b)
+                {
+                    g[i][j] = 'X';
+                    cnt++;
+                }
+            }
+        }
+        if (cnt <= k / 3) // 操作次数小于等于k/3，满足条件
+        {
+            ans = g;
+            return 1;
+        }
+        else
+            return 0;
+    };
+    for (a = 0; a < 3; a++)
+    {
+        b = (a + 1) % 3;
+        if (cfg(v))
+        {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    cout << ans[i][j];
+                }
+                cout << '\n';
+            }
+            return;
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    cout.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
