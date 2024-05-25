@@ -7,7 +7,7 @@ const int Mod = 998244353;
 const int G = 3; // 998244353的原根为3
 const int maxn = 1e6 + 6;
 
-int QuickPow(int a, int k)
+int QuickPow(int a, int k) // 快速幂
 {
     int ret = 1;
     while (k)
@@ -21,13 +21,14 @@ int QuickPow(int a, int k)
 }
 
 int rev[3 * maxn];
-inline void GetReverse(int len, int lg)
+inline void GetReverse(int len, int lg) // 获得二进制位的反转
 {
     for (int i = 0; i < len; i++)
         rev[i] = 0;
     for (int i = 0; i < len; i++)
         rev[i] = (rev[i >> 1] >> 1) | ((i & 1) << (lg - 1));
 }
+
 void NTT(vector<int> &a, int dir)
 {
     int len = a.size();
@@ -53,7 +54,7 @@ void NTT(vector<int> &a, int dir)
     }
     if (dir == -1)
     {
-        int inv = QuickPow(len, Mod - 2);
+        int inv = QuickPow(len, Mod - 2); // 乘法逆元
         for (int i = 0; i < len; i++)
             a[i] = 1LL * a[i] * inv % Mod;
     }
@@ -65,17 +66,18 @@ int main()
     cin.tie(0);
     cout.tie(0);
 
+    // 以下代码实现了多项式f(x)和多项式g(x)相乘
     int n, m;
     cin >> n >> m;
     int lg = 0;
-    int bound = 1;
+    int bound = 1; // 将多项式的系数扩充到2的整数次幂
     while (bound <= n + m)
     {
         bound <<= 1;
         lg++;
     }
     GetReverse(bound, lg);
-    vector<int> f(bound, 0), g(bound, 0);
+    vector<int> f(bound, 0), g(bound, 0); // 数组大小开到bound(即结果多项式扩充后的大小)
     for (int i = 0; i <= n; i++)
     {
         cin >> f[i];
@@ -88,7 +90,7 @@ int main()
     NTT(g, 1);
     for (int i = 0; i < bound; i++)
     {
-        f[i] = (1LL * f[i] * g[i]) % Mod;
+        f[i] = (1LL * f[i] * g[i]) % Mod; // 将相乘结果存储在f[]数组中
     }
     NTT(f, -1);
     for (int i = 0; i <= n + m; i++)
