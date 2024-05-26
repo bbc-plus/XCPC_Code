@@ -1,0 +1,91 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int n;
+        char c;
+        cin >> n >> c;
+        vector<pair<string, string>> ans;
+        vector<string> v(2 * n);
+        for (int i = 0; i < 2 * n; i++)
+            cin >> v[i];
+        auto cmp = [&](string a, string b) -> bool
+        {
+            // 同为王牌花色时，点数小在前
+            if (a[1] == c && b[1] == c) // 事实上该判断可与第四条判断合并，但这样更加清晰
+                return a[0] < b[0];
+            // 判断2和判断3是使王牌花色在排序后位于其他花色的后面
+            if (a[1] == c)
+                return 0;
+            if (b[1] == c)
+                return 1;
+            // 相同花色，点数小在前
+            if (a[1] == b[1])
+                return a[0] < b[0];
+            // 不同花色，按字典序(只要给定任意一种规则排序即可，这边为了方便采用字典序)
+            if (a[1] != b[1])
+                return a[1] < b[1];
+            return 1;
+        };
+        sort(v.begin(), v.end(), cmp); // 按贪心顺序排序，即先消去王牌花色外的可消去牌对，再用王牌花色消去剩下的牌
+        int small = 0;                 // 被击败的牌即小牌的索引
+        int big = 1;                   // 击败小牌的大牌的索引
+        vector<bool> del(2 * n, 0);
+        // 操作一：先消去王牌花色外的可消去牌对
+        while (big <= 2 * n - 1)
+        {
+            if (v[big][1] == c) // 遇到王牌花色则退出循环
+                break;
+            // 可消去
+            if (v[small][1] == v[big][1])
+            {
+                del[small] = 1;
+                del[big] = 1;
+                ans.push_back({v[small], v[big]});
+                small += 2;
+                big += 2;
+            }
+            // 不可消去
+            else
+            {
+                small++;
+                big++;
+            }
+        }
+        vector<string> v2; // 保存完成操作一后仍剩下的牌，供操作二消去
+        for (int i = 0; i < 2 * n; i++)
+        {
+            if (del[i] == 0)
+                v2.push_back(v[i]);
+        }
+        // 操作二：再用王牌花色消去剩下的牌
+        for (int i = 0; i < v2.size() / 2; i++)
+        {
+            int j = v2.size() - 1 - i;
+            if (v2[j][1] == c)
+                ans.push_back({v2[i], v2[j]});
+            else
+                break;
+        }
+        if (ans.size() == n)
+        {
+            for (int i = 0; i < ans.size(); i++)
+            {
+                cout << ans[i].first << ' ' << ans[i].second << '\n';
+            }
+        }
+        else
+            cout << "IMPOSSIBLE\n";
+    }
+
+    return 0;
+}
