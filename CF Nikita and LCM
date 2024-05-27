@@ -1,0 +1,84 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+int gcd(int a, int b)
+{
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+int lcm(int a, int b)
+{
+    return a / gcd(a, b) * b;
+}
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n);
+    int ans = 0;
+    map<int, int> mp; // map记录存在在数组a中的数
+    int maxNum = 0;   // 我们需要先找到最大值
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i];
+        mp[a[i]] = 1;
+        maxNum = max(maxNum, a[i]);
+    }
+    for (int i = 0; i < n; i++)
+    {
+        // 如果数组中有一个数不整除最大值，那么二者的lcm一定大于最大值，即一定不在数组a中，那么最长的满足条件的子序列长度为n
+        if (maxNum % a[i] != 0)
+        {
+            cout << n << '\n';
+            return;
+        }
+    }
+    // 我们需要知道，一旦该数组不满足上面的这种情况(即ans为n的情况)，那么该数组就有存在一个性质
+    // 即：数组中的任何一个数都是最大值的因数(条件1)
+    // 于是我们可以知道，数组中任意取数进行lcm运算，所得到的值一定也是最大值的因数
+    // 那么我们的策略就是，找到最大值的所有因数，如果该数不在数组a中，则检查其是否能由数组中的数进行lcm运算得到，如果能得到，更新ans为所有可能答案中的最大值
+    auto updata = [&](int subsequence_lcm) // 更新满足条件的子序列中的最长长度
+    {
+        int cur_lcm = 1; // 当前在数组中的所有subsequence_lcm的因数通过lcm运算得到的值
+        int cnt = 0;     // subsequence_lcm的因数个数
+        for (int i = 0; i < n; i++)
+        {
+            if (subsequence_lcm % a[i] == 0)
+            {
+                cnt++;
+                cur_lcm = lcm(cur_lcm, a[i]);
+            }
+        }
+        if (cur_lcm == subsequence_lcm) // 如果subsequence_lcm能由数组中的数通过lcm运算得到，则其是满足条件的一种情况
+            ans = max(ans, cnt);
+    };
+    for (int i = 1; i * i <= maxNum; i++) // 利用数学知识，可由maxNum/i运算得到maxNum的另一个因数，从而降低遍历复杂度
+    {
+        if (maxNum % i == 0)
+        {
+            if (mp[i] == 0)
+                updata(i);
+            if (mp[maxNum / i] == 0)
+                updata(maxNum / i);
+        }
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
