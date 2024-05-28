@@ -1,0 +1,49 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n), b(n);
+    for (int i = 0; i < n; i++)
+        cin >> a[i] >> b[i];
+    auto check = [&](int x) -> bool
+    {
+        int cnt = 0;
+        for (int i = 0; i < n; i++)
+        {
+            if (cnt <= b[i] && x - cnt - 1 <= a[i]) // 贪心策略，每找到一个满足条件的朋友，邀请他
+                cnt++;
+            if (cnt >= x) // 邀请人数已足够，返回1
+                return 1;
+        }
+        return 0;
+    };
+    // 二分查找，确定上下界为1和n
+    int l = 1, r = n;
+    while (l < r)
+    {
+        int mid = (l + r + 1) / 2;
+        if (check(mid))
+            l = mid;
+        else
+            r = mid - 1;
+    }
+    cout << l << '\n';
+    return;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+        solve();
+
+    return 0;
+}
