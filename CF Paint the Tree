@@ -1,0 +1,104 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+const int maxn = 2e5 + 6;
+vector<int> e[maxn]; // e[i]存储以i为起点的所有有向边
+
+void add(int x, int y) // 加无向边
+{
+    e[x].push_back(y);
+    e[y].push_back(x);
+}
+
+int a, b;
+deque<int> path; // 记录两颗棋子汇合的路径
+int st = -1;     // 两颗棋子最快汇合后的点(也是dfs求max_dis的起点)
+int step = 0;    // 汇合所需步数
+int extra = 0;   // 两个棋子不可能位于同一个结点的情况(即两棋子异步)，此时需要补充1步
+void dfs1(int pos, int fa, int depth, int tag)
+{
+    if (st != -1) // 如果已找到答案，快速返回
+        return;
+    for (int i = 0; i < e[pos].size(); i++)
+    {
+        int to = e[pos][i];
+        if (to == tag)
+        {
+            step = (depth + 1) / 2;
+            if (path.size() % 2 == 0) // 两棋子异步(即两棋子初始时距离为奇数，也就是最短路径上的结点为偶数个的情况)
+            {
+                extra = 1;          // 补充1步
+                path.push_front(a); // 特殊照顾一下两棋子初始时距离为1的情况，因为这种情况下st为a，但是path路径在dfs时并没有保存a结点
+                st = path[step];
+            }
+            else // 两棋子同步(即两棋子初始时距离为偶数，也就是最短路径上的结点为奇数个的情况)
+            {
+                st = path[step - 1];
+            }
+            return;
+        }
+        if (to == fa)
+            continue;
+        path.push_back(to);
+        dfs1(to, pos, depth + 1, tag);
+        path.pop_back(); // 回溯
+    }
+}
+
+int max_dis = 0; // 起点st到其他点的所有距离中的最远距离
+void dfs2(int pos, int fa, int depth)
+{
+    max_dis = max(max_dis, depth); // 维护最远距离即可
+    for (int i = 0; i < e[pos].size(); i++)
+    {
+        int to = e[pos][i];
+        if (to == fa)
+            continue;
+        dfs2(to, pos, depth + 1);
+    }
+}
+
+void solve()
+{
+    int n;
+    cin >> n;
+    cin >> a >> b;
+    int x, y;
+    for (int i = 1; i <= n - 1; i++)
+    {
+        cin >> x >> y;
+        add(x, y);
+    }
+    if (a != b)
+        dfs1(a, 0, 0, b);
+    else
+        st = a;
+    dfs2(st, 0, 0);
+    // 2 * (n - 1) - max_dis是用到了一个结论：从树中的一个结点开始走，走过树上所有结点至少需要2 * (n - 1) - max_dis步
+    cout << step + 2 * (n - 1) - max_dis + extra << '\n';
+
+    // 初始化，为了处理下一组测试数据
+    for (int i = 1; i <= n; i++)
+    {
+        e[i].clear();
+    }
+    path.clear();
+    st = -1;
+    dis = 0;
+    max_dis = 0;
+    extra = 0;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+        solve();
+
+    return 0;
+}
