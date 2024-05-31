@@ -1,0 +1,111 @@
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+
+// 用st表封装的区间最值RMQ
+// 当前为区间最大值，可修改为区间最小值
+template <class T>
+struct RMQ
+{
+    int n;
+    vector<T> a;
+    vector<array<T, 30>> f;
+    function<T(T, T)> func;
+    RMQ(){};
+    RMQ(vector<T> init_, function<T(T, T)> func_)
+    {
+        work(init_, func_);
+    }
+    void work(vector<T> &init_)
+    {
+        work(init_, [&](int x, int y)
+             { return max(x, y); });
+    }
+    void work(vector<T> &init_, function<T(T, T)> func_)
+    {
+        a = init_;
+        this->func = func_;
+        n = a.size();
+        f.assign(n, {});
+        for (int i = 1; i < n; i++)
+            f[i][0] = a[i];
+        for (int j = 1; j <= __lg(n) + 1; j++)
+        {
+            for (int i = 1; i + (1 << j) - 1 < n; i++)
+            {
+                f[i][j] = func(f[i][j - 1], f[i + (1 << (j - 1))][j - 1]);
+            }
+        }
+    }
+    T query(int l, int r)
+    {
+        int k = log2(r - l + 1);
+        return func(f[l][k], f[r - (1 << k) + 1][k]);
+    }
+};
+// 使用指南：
+// 1.RMQ<int>rmq;
+// 2.rmq.work(a);
+// 注释：a为数组，大小为n+1，1~n对应题目所给数组下标，a[0]不参与区间最值运算
+
+void solve()
+{
+    string s;
+    cin >> s;
+    s = ' ' + s;
+    int n = s.size();
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        a[i] = (s[i] == '(') ? 1 : -1; // 映射为正负1，方便运算
+    }
+    vector<int> p(n + 1, 0); // 前缀和
+    for (int i = 1; i <= n; i++)
+    {
+        p[i] = p[i - 1] + a[i];
+    }
+    RMQ<int> rmq;
+    rmq.work(p);              // 处理区间最大值
+    map<int, vector<int>> mp; // 将前缀和相同的位置放在一起，其中任取(pos1,pos2]区间，左括号和右括号出现的次数相同，这样才有可能对答案产生贡献(至于为什么是可能，是因为要去掉翻转后右括号的数量大于左括号数量的情况)
+    for (int i = 1; i < n; i++)
+    {
+        mp[p[i]].push_back(i);
+    }
+    ll ans = 0;
+    for (auto &[val, tmp] : mp) // C17标准才能使用
+    {
+        for (int i = 0; i < tmp.size(); i++)
+        {
+            // 双指针
+            int left = i;
+            // 二分查找满足条件的右侧指针的最大索引
+            int l = i, r = tmp.size() - 1;
+            while (l < r)
+            {
+                int mid = (l + r + 1) / 2;
+                if (2 * val >= rmq.query(tmp[left] + 1, tmp[mid])) // 保证翻转后在每个前缀和位置右括号的数量都不大于左括号数量
+                    l = mid;
+                else
+                    r = mid - 1;
+            }
+            int right = l;
+            ans += right - left; // 如果(tmp[left],tmp[right]]区间的最大值满足条件，那么(tmp[left],tmp[i]],left<i<=right的所有区间都满足条件，这也是为什么我们能使用二分查找的原因
+        }
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
