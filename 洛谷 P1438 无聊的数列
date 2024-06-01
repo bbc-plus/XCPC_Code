@@ -1,0 +1,89 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+int n, m;
+
+#define lc p << 1
+#define rc p << 1 | 1
+
+const int maxn = 1e5 + 6;
+i64 a[maxn];
+
+struct node
+{
+    i64 l, r, sum1, sum2;
+} tr[maxn * 4];
+
+void build(int p, int l, int r) // p是当前位置，l和r表示区间
+{
+    if (l == r)
+    {
+        tr[p] = {l, r, 0, 0};
+        return;
+    }
+    int mid = l + r >> 1;
+    build(lc, l, mid);
+    build(rc, mid + 1, r);
+    tr[p] = {l, r, tr[lc].sum1 + tr[rc].sum1, tr[lc].sum2 + tr[rc].sum2};
+}
+
+void update(int p, int l, int r, i64 add1, i64 add2) // 区间加数
+{
+    if (l <= tr[p].l && r >= tr[p].r)
+    {
+        tr[p].sum1 += add1;
+        tr[p].sum2 += add2;
+        return;
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    if (l <= mid)
+        update(lc, l, r, add1, add2);
+    if (r >= mid + 1)
+        update(rc, l, r, add1, add2);
+}
+
+i64 query(int p, int x, i64 sum1, i64 sum2) // p是当前位置，x表示查询位置
+{
+    if (tr[p].l == tr[p].r)
+    {
+        return tr[p].sum1 + sum1 + (tr[p].sum2 + sum2) * (i64)tr[p].l; // 处理等差数列的关键所在
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    if (x <= mid)
+        return query(lc, x, sum1 + tr[p].sum1, sum2 + tr[p].sum2);
+    else
+        return query(rc, x, sum1 + tr[p].sum1, sum2 + tr[p].sum2);
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    build(1, 1, n);
+    while (m--)
+    {
+        int op;
+        cin >> op;
+        if (op == 1)
+        {
+            int l, r, k, d;
+            cin >> l >> r >> k >> d;
+            update(1, l, r, k - d * l, d);
+        }
+        else
+        {
+            int x;
+            cin >> x;
+            cout << query(1, x, 0, 0) + a[x] << '\n';
+        }
+    }
+
+    return 0;
+}
