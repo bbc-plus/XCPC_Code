@@ -1,0 +1,84 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        int h, w, xa, ya, xb, yb;
+        cin >> h >> w >> xa >> ya >> xb >> yb;
+        // 由于Alice的棋子只会往下走，Bob的棋子只会往上走，那么如果xa>=xb，则二者不可能走到同一点，必为平局
+        if (xa >= xb)
+        {
+            cout << "Draw\n";
+        }
+        else
+        {
+            // 分两种情况：Alice追杀Bob，Bob追杀Alice
+            if (!((xb - xa) & 1)) // 行间距为偶数时，Bob追杀Alice
+            {
+                if (ya == yb) // 不论逃亡者下棋，追杀者永远可以走到与逃亡者同一列上
+                    cout << "Bob\n";
+                else
+                {
+                    int cnt = (xb - xa) / 2; // cnt表示至少需要多少的列数供逃亡者逃亡
+                    if (ya > yb)
+                    {
+                        cnt -= ya - yb - 1;
+                        if (cnt <= w - ya) // 逃亡方向剩余列数足够，则平局
+                            cout << "Draw\n";
+                        else
+                            cout << "Bob\n";
+                    }
+                    else
+                    {
+                        cnt -= yb - ya - 1;
+                        if (cnt <= ya - 1) // 逃亡方向剩余列数足够，则平局
+                            cout << "Draw\n";
+                        else
+                            cout << "Bob\n";
+                    }
+                }
+            }
+            else // 行间距为奇数时，Alice追杀Bob
+            {
+                // 由于Alice先手，可以通过先下一步棋使得ya靠近yb的方式将问题转化为逃亡者先手
+                if (ya > yb)
+                    ya--;
+                if (ya < yb)
+                    ya++;
+                if (ya == yb) // 不论逃亡者下棋，追杀者永远可以走到与逃亡者同一列上
+                    cout << "Alice\n";
+                else
+                {
+                    int cnt = (xb - xa) / 2; // cnt表示至少需要多少的列数供逃亡者逃亡
+                    if (ya > yb)
+                    {
+                        cnt -= ya - yb - 1;
+                        if (cnt <= yb - 1) // 逃亡方向剩余列数足够，则平局
+                            cout << "Draw\n";
+                        else
+                            cout << "Alice\n";
+                    }
+                    else
+                    {
+                        cnt -= yb - ya - 1;
+                        if (cnt <= w - yb) // 逃亡方向剩余列数足够，则平局
+                            cout << "Draw\n";
+                        else
+                            cout << "Alice\n";
+                    }
+                }
+            }
+        }
+    }
+
+    return 0;
+}
