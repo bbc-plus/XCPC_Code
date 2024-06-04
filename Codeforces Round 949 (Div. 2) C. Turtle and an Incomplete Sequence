@@ -1,0 +1,125 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n);
+    vector<int> idx;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i];
+        if (a[i] != -1)
+            idx.push_back(i); // idx数组保存所有值非-1的下标
+    }
+    if (idx.empty()) // 特判全是-1的情况
+    {
+        for (int i = 0; i < n; i++) // 这种情况只需要1和2交替出现即可
+        {
+            if (i & 1)
+                a[i] = 1;
+            else
+                a[i] = 2;
+        }
+        for (int i = 0; i < n; i++)
+            cout << a[i] << " \n"[i == n - 1];
+    }
+    else
+    {
+        auto path = [&](int x, int y) -> vector<int>
+        {
+            vector<int> left, right; // left和right分别为x到lca的路径和y到lca的路径
+            // 先将x和y转移到二叉树的同一层中
+            while ((int)log2(x) > (int)log2(y))
+            {
+                left.push_back(x);
+                x >>= 1;
+            }
+            while ((int)log2(y) > (int)log2(x))
+            {
+                right.push_back(y);
+                y >>= 1;
+            }
+            // 然后x和y同时向LCA转移
+            while (x != y)
+            {
+                left.push_back(x);
+                right.push_back(y);
+                x >>= 1;
+                y >>= 1;
+            }
+            // 勿忘加入LCA
+            left.push_back(x);
+            // 合并left和right两个数组
+            for (int i = right.size() - 1; i >= 0; i--)
+            {
+                left.push_back(right[i]);
+            }
+            // 返回合并后的数组，即路径
+            return left;
+        };
+        // 第一个值非-1的索引左侧的-1可以通过上一个值交替乘2，除2来构造
+        for (int i = idx[0] - 1, cnt = 1; i >= 0; i--, cnt++)
+        {
+            if (cnt & 1)
+                a[i] = a[i + 1] * 2;
+            else
+                a[i] = a[i + 1] / 2;
+        }
+        // 最后一个值非-1的索引右侧的-1可以通过上一个值交替乘2，除2来构造
+        for (int i = idx[idx.size() - 1] + 1, cnt = 1; i < n; i++, cnt++)
+        {
+            if (cnt & 1)
+                a[i] = a[i - 1] * 2;
+            else
+                a[i] = a[i - 1] / 2;
+        }
+        // 对于两个值非-1的索引中间的-1，找到值a[idx[i]]和a[idx[i+1]]的LCA(最近公共祖先)，然后存储a[idx[i]]到a[idx[i+1]]的转移路径
+        for (int i = 0; i < idx.size() - 1; i++)
+        {
+            int x = idx[i];
+            int y = idx[i + 1];
+            vector<int> res = path(a[x], a[y]);
+            // 1.如果路径大小的奇偶性和数组内区间元素个数的奇偶性不同，则无法构造(因为若有剩余-1，需要交替*2,/2，而这个操作一定是偶数次)
+            // 2.如果路径大小大于数组内区间元素个数，则无法构造，因为-1的数量不足够实现a[idx[i]]到a[idx[i+1]]的转移
+            if (((res.size() & 1) ^ ((y - x + 1) & 1)) || (res.size() > (y - x + 1)))
+            {
+                cout << -1 << '\n';
+                return;
+            }
+            // 如果可以实现构造，先将res路径更新到a数组中
+            for (int j = x, cnt = 0; j < x + res.size(); j++, cnt++)
+            {
+                a[j] = res[cnt];
+            }
+            // 然后通过交替*2,/2的操作来填补剩余的-1(剩余偶数个-1)
+            for (int j = x + res.size(), cnt = 1; j <= y; j++, cnt++)
+            {
+                if (cnt & 1)
+                    a[j] = a[j - 1] * 2;
+                else
+                    a[j] = a[j - 1] / 2;
+            }
+        }
+        for (int i = 0; i < n; i++)
+            cout << a[i] << " \n"[i == n - 1];
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
