@@ -1,0 +1,24 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        i64 n, k;
+        cin >> n >> k;
+        i64 num = ceil(1.0 * n / k);
+        i64 sum = num * k;
+        i64 maxn = ceil(1.0 * sum / n);
+        cout << maxn << '\n';
+    }
+
+    return 0;
+}
