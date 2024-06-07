@@ -1,0 +1,157 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+#define lc (p << 1)
+#define rc (p << 1 | 1)
+
+const int maxn = 1e6 + 6;
+i64 a[maxn];
+
+struct node
+{
+    int l, r;
+    i64 w, add, mdy; // 懒标记add和mdy
+} tr[maxn * 4];
+
+void pushup(int p)
+{
+    tr[p].w = max(tr[lc].w, tr[rc].w); // w维护区间最大值
+}
+
+void lazy_mdy(int p, i64 k) // 更新p结点mdy的懒标记
+{
+    tr[p].w = k;
+    tr[p].mdy = k; // 更新赋值标记mdy
+    tr[p].add = 0; // 一旦存在赋值，先前的增加全部失效
+}
+
+void lazy_add(int p, i64 k) // 更新p结点add的懒标记
+{
+    tr[p].w += k;
+    if (tr[p].mdy != LLONG_MAX) // 如果存在赋值标记，则在赋值标记上增加k
+        tr[p].mdy += k;
+    else // 否则在add标记上增加k
+        tr[p].add += k;
+}
+
+void pushdown(int p) // 下传懒标记
+{
+    if (tr[p].mdy != LLONG_MAX)
+    {
+        lazy_mdy(lc, tr[p].mdy);
+        lazy_mdy(rc, tr[p].mdy);
+        tr[p].mdy = LLONG_MAX;
+    }
+    else if (tr[p].add != 0)
+    {
+        lazy_add(lc, tr[p].add);
+        lazy_add(rc, tr[p].add);
+        tr[p].add = 0;
+    }
+}
+
+// 建树
+void build(int p, int l, int r) // p是当前位置，l和r表示区间
+{
+    if (l == r)
+    {
+        tr[p] = {l, r, a[l], 0, LLONG_MAX};
+        return;
+    }
+    int mid = l + r >> 1;
+    build(lc, l, mid);
+    build(rc, mid + 1, r);
+    tr[p] = {l, r, max(tr[lc].w, tr[rc].w), 0, LLONG_MAX};
+}
+
+// 区间修改
+void modify(int p, int x, int y, i64 k)
+{
+    if (x <= tr[p].l && tr[p].r <= y)
+    {
+        lazy_mdy(p, k);
+        return;
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    pushdown(p);
+    if (x <= mid)
+        modify(lc, x, y, k);
+    if (y > mid)
+        modify(rc, x, y, k);
+    pushup(p);
+}
+
+// 区间增加
+void update(int p, int x, int y, i64 k)
+{
+    if (x <= tr[p].l && tr[p].r <= y)
+    {
+        lazy_add(p, k);
+        return;
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    pushdown(p);
+    if (x <= mid)
+        update(lc, x, y, k);
+    if (y > mid)
+        update(rc, x, y, k);
+    pushup(p);
+}
+
+// 区间询问最大值
+i64 query(int p, int x, int y) // p是当前位置，x和y表示区间
+{
+    if (x <= tr[p].l && tr[p].r <= y) // 已覆盖则返回该部分的结果
+        return tr[p].w;
+    int mid = tr[p].l + tr[p].r >> 1;
+    pushdown(p);
+    i64 ans = LLONG_MIN;
+    if (x <= mid)
+        ans = max(ans, query(lc, x, y));
+    if (y > mid)
+        ans = max(ans, query(rc, x, y));
+    return ans;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, q;
+    cin >> n >> q;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    build(1, 1, n);
+    while (q--)
+    {
+        int op;
+        cin >> op;
+        if (op == 1)
+        {
+            int l, r;
+            i64 x;
+            cin >> l >> r >> x;
+            modify(1, l, r, x);
+        }
+        else if (op == 2)
+        {
+            int l, r;
+            i64 x;
+            cin >> l >> r >> x;
+            update(1, l, r, x);
+        }
+        else
+        {
+            int l, r;
+            cin >> l >> r;
+            cout << query(1, l, r) << '\n';
+        }
+    }
+
+    return 0;
+}
