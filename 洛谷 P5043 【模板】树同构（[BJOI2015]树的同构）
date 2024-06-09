@@ -1,0 +1,103 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+const int MAX = 56;
+vector<int> e[MAX];
+vector<pair<int, int>> centre[MAX];
+int siz[MAX], maxn[MAX];
+int n;
+
+int dfs(int u, int fa)
+{
+    int res = 0;
+    siz[u] = 0;
+    for (int v : e[u])
+    {
+        if (v != fa)
+        {
+            int num = dfs(v, u);
+            siz[u] += num;
+            res = max(res, num);
+        }
+    }
+    maxn[u] = max(res, n - (siz[u] + 1));
+    return siz[u] + 1;
+}
+
+// 异或哈希
+int Hash(int u, int fa)
+{
+    int res = 1;
+    vector<int> num;
+    for (int v : e[u])
+    {
+        if (v != fa)
+            num.push_back(Hash(v, u));
+    }
+    sort(num.begin(), num.end());
+    for (int x : num)
+        res += x * 131 ^ 133331;
+    return res;
+}
+
+int solve(int idx)
+{
+    // 初始化
+    for (int i = 0; i < MAX; i++)
+    {
+        e[i].clear();
+        maxn[i] = 0;
+    }
+    int fa;
+    cin >> n;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> fa;
+        if (fa != 0)
+        {
+            e[i].push_back(fa);
+            e[fa].push_back(i);
+        }
+    }
+    // 找到树的所有重心
+    dfs(1, 0);
+    int tmp = INT_MAX;
+    for (int i = 1; i <= n; i++)
+    {
+        tmp = min(tmp, maxn[i]);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        if (tmp == maxn[i])
+            centre[idx].push_back({i, Hash(i, 0)}); // 存储第i个树对应的哈希值
+    }
+    for (pair<int, int> u : centre[idx])
+    {
+        // 遍历先前的树，寻找与其同构的树的最小编号
+        for (int j = 1; j < idx; j++)
+        {
+            for (pair<int, int> v : centre[j])
+            {
+                if (u.second == v.second) // 在有根树的条件下，哈希值相同的树是同构的(如果不发生哈希冲突)
+                    return j;
+            }
+        }
+    }
+    // 一定与自身同构
+    return idx;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int m;
+    cin >> m;
+    for (int i = 1; i <= m; i++)
+        cout << solve(i) << '\n';
+
+    return 0;
+}
