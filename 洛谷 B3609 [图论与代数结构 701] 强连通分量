@@ -1,0 +1,92 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+// 强连通分量Tarjan算法
+// 复杂度:O(n+m)
+// 有向边分4类：树边、返祖边、横叉边、前向边。返祖边与树边必构成环，而横叉边与树边可能构成环
+const int MAX = 1e5 + 6;
+vector<int> e[MAX];
+int dfn[MAX]; // 时间戳：dfn[i]表示节点i第一次被访问的顺序
+int low[MAX]; // 追溯值：low[i]表示从节点i出发所能访问到的最早时间戳
+// 更新low值的意义是避免SCC的节点提前出栈
+int tot;        // 时间戳编号
+int sta[MAX];   // 栈
+int insta[MAX]; // 是否在栈中
+int top;        // 栈顶索引
+int scc[MAX];   // 强连通分量编号
+int siz[MAX];   // 强连通分量大小
+int cnt;        // 第cnt个强连通分量
+
+vector<int> scc_num[MAX]; // 每个强连通分量里的元素
+int vis[MAX];             // 第i个节点所在强连通分量是否已经输出
+
+void scc_tarjan(int x)
+{
+    // 进入x时，盖戳，入栈
+    dfn[x] = low[x] = ++tot;
+    sta[++top] = x;
+    insta[x] = 1;
+    for (int y : e[x])
+    {
+        if (!dfn[y]) // y尚未访问
+        {
+            scc_tarjan(y);
+            low[x] = min(low[x], low[y]); // 回到x时更新low
+        }
+        else if (insta[y]) // 如果y已访问且在栈中
+        {
+            low[x] = min(low[x], dfn[y]); // 回到x时更新low
+        }
+    }
+    // 离开x时，记录SCC
+    if (dfn[x] == low[x]) // 如果x是所处SCC的根
+    {
+        int y;
+        ++cnt;
+        do
+        {
+            y = sta[top--];
+            insta[y] = 0;
+            scc[y] = cnt;
+            scc_num[cnt].push_back(y);
+            ++siz[cnt];
+        } while (y != x);
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    int a, b;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> a >> b;
+        e[a].push_back(b);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        if (!dfn[i])
+            scc_tarjan(i);
+    }
+    cout << cnt << '\n';
+    for (int i = 1; i <= n; i++)
+    {
+        if (!vis[i])
+        {
+            sort(scc_num[scc[i]].begin(), scc_num[scc[i]].end());
+            for (int j = 0; j < scc_num[scc[i]].size(); j++)
+            {
+                cout << scc_num[scc[i]][j] << " \n"[j == scc_num[scc[i]].size() - 1];
+                vis[scc_num[scc[i]][j]] = 1;
+            }
+        }
+    }
+
+    return 0;
+}
