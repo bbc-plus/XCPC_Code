@@ -1,0 +1,96 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int n;           // 节点个数
+vector<int> ans; // 全局数组，拓扑时收集排序结果
+
+int Toposort(vector<int> &a, vector<int> &b) // a和b分别记录了所有有向边的起点和终点
+{
+    vector<vector<int>> access(n + 1); // 对于每个点所指向的点，例如对于access[i][j]表示对于第i个点所指向的第j个点
+
+    vector<int> d(n + 1, 0); // 每个点的入度
+
+    for (int i = 0; i < a.size(); i++)
+    {
+        int x = a[i];
+        int y = b[i];
+        d[y]++;                 // 对每个点的入度进行记录
+        access[x].push_back(y); // 把y放入x的点中
+    }
+
+    int cnt = 0;
+    queue<int> q;                // 拓扑排序入度为0的收集队列
+    for (int i = 1; i <= n; i++) // 找到所有读入中入度为0的加入队列
+    {
+        if (d[i] == 0)
+        {
+            cnt++;
+            q.push(i); // 把所有入度为0的点放入q中
+            ans.push_back(i);
+        }
+    }
+    int level = 0; // 统计层数
+    while (!q.empty())
+    {
+        level++;
+        int size = q.size();
+        while (size--) // 每层bfs
+        {
+            int cur = q.front();
+            q.pop();
+            for (auto &next : access[cur]) // 遍历第i个点所指向的所有点
+            {
+                d[next]--;
+                if (!d[next]) // 入度为0
+                {
+                    cnt++;
+                    q.push(next); // q需要不断放入入度为0的点
+                    ans.push_back(next);
+                }
+            }
+        }
+    }
+    // 第一种情况：有环
+    if (cnt < d.size()) // 入队的数量若小于当前读入的总数量，说明有环
+    {
+        // cout << "有环" << '\n';
+        return -1;
+    }
+    // 第二种情况：稳定拓扑
+    if (level == n) // bfs层数等于n，说明可以确定唯一顺序
+    {
+        return 1;
+    }
+    // 第三种情况：不稳定拓扑
+    return 0;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    cin >> n;
+    vector<int> a, b;
+    for (int i = 1; i <= n; i++)
+    {
+        int x;
+        while (1)
+        {
+            cin >> x;
+            if (x == 0)
+                break;
+            a.push_back(i);
+            b.push_back(x);
+        }
+    }
+    Toposort(a, b);
+    for (int i = 0; i < ans.size(); i++)
+    {
+        cout << ans[i] << " \n"[i == n - 1];
+    }
+
+    return 0;
+}
