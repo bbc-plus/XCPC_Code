@@ -1,0 +1,68 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+const int MAXN = 1e6 + 6;
+
+struct Trie
+{
+    int ch[MAXN][63], cnt[MAXN], idx = 0;
+    map<char, int> mp;
+    void init()
+    {
+        i64 id = 0;
+        for (char c = 'a'; c <= 'z'; c++) // 为小写字母编号
+            mp[c] = ++id;
+    }
+    void insert(string s)
+    {
+        int u = 0;
+        for (int i = 0; i < s.size(); i++)
+        {
+            int v = mp[s[i]];
+            if (!ch[u][v])
+                ch[u][v] = ++idx; // 给孩子节点赋予新编号
+            u = ch[u][v];
+            if (i == s.size() - 1) // 在模式串结束时计数
+                cnt[u]++;
+        }
+    }
+    i64 query(string s)
+    {
+        i64 res = 0;
+        int u = 0;
+        for (int i = 0; i < s.size(); i++)
+        {
+            int v = mp[s[i]];
+            if (!ch[u][v]) // 已经不可能再出现前缀字符串，直接返回
+                return res;
+            u = ch[u][v];
+            res += cnt[u]; // 在询问串的每个位置都统计可能的前缀
+        }
+        return res; // 返回总的前缀字符串个数
+    }
+} trie;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    trie.init();
+    int n, q;
+    cin >> n >> q;
+    string s;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> s;
+        trie.insert(s); // 在字典树中加入模式串
+    }
+    for (int i = 0; i < q; i++)
+    {
+        cin >> s;
+        cout << trie.query(s) << '\n'; // 输出询问字符串的前缀模式串数量
+    }
+
+    return 0;
+}
