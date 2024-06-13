@@ -1,0 +1,50 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    // 存矩形图，将字符'1'和'0'转化为数字1和0存储，便于计算
+    vector<vector<char>> a(n + 1, vector<char>(m + 1, 0));
+    vector<vector<int>> g(n + 1, vector<int>(m + 1, 0));
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+        {
+            cin >> a[i][j];
+            g[i][j] = (a[i][j] == '1') ? 1 : 0;
+        }
+    // 求两次前缀和，先每一行求前缀和，再每一列求前缀和
+    vector<vector<int>> p(n + 1, vector<int>(m + 1, 0));
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            p[i][j] = p[i][j - 1] + g[i][j];
+    for (int i = 1; i <= n; i++)
+        for (int j = 1; j <= m; j++)
+            p[i][j] = p[i - 1][j] + p[i][j];
+    // 遍历谈判桌的左上顶点和右下顶点，确定长方形区域后判断其是否空闲
+    int ans = 0;
+    for (int sx = 1; sx <= n; sx++)
+        for (int sy = 1; sy <= m; sy++)
+            for (int ex = sx; ex <= n; ex++)
+                for (int ey = sy; ey <= m; ey++)
+                {
+                    // 两次前缀和还原为区域总和
+                    int sum1 = p[ex][sy - 1] - p[sx - 1][sy - 1];
+                    int sum2 = p[ex][ey] - p[sx - 1][ey];
+                    if (sum2 - sum1 == 0) // 若该长方形区域空闲，用其周长更新答案
+                    {
+                        int C = 2 * (ex - sx + 1) + 2 * (ey - sy + 1); // 计算周长
+                        ans = max(ans, C);
+                    }
+                }
+
+    cout << ans << '\n';
+
+    return 0;
+}
