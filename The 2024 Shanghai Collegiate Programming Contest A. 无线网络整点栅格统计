@@ -1,0 +1,56 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    n++;
+    m++;
+    vector<vector<int>> ans(n + 1, vector<int>(m + 1, 0));
+    // 枚举整点栅格的一个顶点a
+    for (int ai = 1; ai <= n; ai++)
+    {
+        for (int aj = 1; aj <= m; aj++)
+        {
+            // 枚举a的对角顶点b
+            for (int bi = ai; bi <= n; bi++)
+            {
+                for (int bj = aj + 1; bj <= m; bj++)
+                {
+                    if ((bi - ai + bj - aj) % 2 == 0)
+                    {
+                        // c为ab中点，也是正方形的中心
+                        double ci = (0.0 + ai + bi) / 2;
+                        double cj = (0.0 + aj + bj) / 2;
+                        // 中心到顶点的距离
+                        double disi = ci - ai;
+                        double disj = cj - aj;
+                        if (ci + disj <= n && cj - disi >= 1 && ci - disj >= 1 && cj + disi <= m) // 若正方形四个顶点均在区域内
+                        {
+                            // 由正方形中心和距离求得四个顶点
+                            ans[ci + disi][cj + disj]++;
+                            ans[ci - disi][cj - disj]++;
+                            ans[ci + disj][cj - disi]++;
+                            ans[ci - disj][cj + disi]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            cout << ans[i][j] << " \n"[j == m];
+        }
+    }
+
+    return 0;
+}
