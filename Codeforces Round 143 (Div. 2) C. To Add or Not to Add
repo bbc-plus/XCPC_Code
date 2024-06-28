@@ -1,0 +1,56 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, k;
+    cin >> n >> k;
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        a[i] += 1e9; // 由于读入的数据存在负数，我们可以通过巧妙地补偿1e9来使数组元素成为非负数
+    }
+    sort(a.begin(), a.end());
+    vector<i64> s(n + 1, 0);
+    for (int i = 1; i <= n; i++) // 前缀和
+        s[i] = s[i - 1] + a[i];
+
+    auto get_cnt = [&](int idx)
+    {
+        // 最大次数即[left,idx]区间的最大长度
+        // 二分left
+        int l = 1, r = idx;
+        while (l < r)
+        {
+            int mid = (l + r) / 2;
+            // 达到idx-mid+1个a[idx]值需要补充1LL * a[idx] * (idx - mid + 1) - (s[idx] - s[mid - 1])的差值
+            // k>=差值，则满足条件
+            if (k >= 1LL * a[idx] * (idx - mid + 1) - (s[idx] - s[mid - 1]))
+                r = mid;
+            else
+                l = mid + 1;
+        }
+        return idx - l + 1;
+    };
+
+    int max_cnt = 0;                   // 某数出现的最大次数
+    int ans_num = -1;                  // 取到最大次数的最小数组元素
+    for (int idx = 1; idx <= n; idx++) // 遍历数组，确定数组中各个元素可出现的最大次数
+    {
+        int cur_cnt = get_cnt(idx);
+        if (cur_cnt > max_cnt)
+        {
+            max_cnt = cur_cnt;
+            ans_num = a[idx];
+        }
+    }
+    cout << max_cnt << ' ' << ans_num - (int)1e9 << '\n'; // 输出时记得将补偿的1e9减去
+
+    return 0;
+}
