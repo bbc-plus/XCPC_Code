@@ -1,0 +1,41 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    vector<vector<char>> g(n, vector<char>(m)); // 存图
+    vector<int> hor(n, 0), ver(m, 0);           // 统计每行的'*'点数和每列的'*'点数
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            cin >> g[i][j];
+            if (g[i][j] == '*')
+            {
+                hor[i]++;
+                ver[j]++;
+            }
+        }
+    }
+    i64 ans = 0; // 直角三角形个数
+    // 遍历图，找到所有构成直角三角形的拐点
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (g[i][j] == '*') // 让其成为拐点，则其与该行的其他'*'构成一条直角边，与该列的其他'*'构成另一条直角边
+            {
+                ans += (hor[i] - 1) * (ver[j] - 1); // 行上直角边与列上直角边的组合个数即为以该点为拐点的直角三角形个数
+            }
+        }
+    }
+    cout << ans << '\n';
+
+    return 0;
+}
