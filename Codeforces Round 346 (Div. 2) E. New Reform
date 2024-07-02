@@ -1,0 +1,72 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+struct DSU
+{
+    std::vector<int> f;
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+    void init(int n)
+    {
+        f.resize(n + 1);
+        std::iota(f.begin() + 1, f.end(), 1);
+    }
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        f[y] = x;
+        return true;
+    }
+};
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    DSU dsu = DSU(n);
+    vector<bool> loops(n + 1, 0); // loops[i]为1表示以i为根的并查集有环
+    int x, y;
+    while (m--)
+    {
+        cin >> x >> y;
+        bool exist_loop = 0;                                    // 表示x和y合并后的整个并查集是否有环
+        if (loops[dsu.find(x)] == 1 || loops[dsu.find(y)] == 1) // 如果合并前存在环，则合并后依然有环
+            exist_loop = 1;
+        if (dsu.find(x) == dsu.find(y)) // 如果合并前两个点已经在同一个并查集中，那么再加上当前这条边，合并后就能形成环
+            exist_loop = 1;
+        dsu.merge(x, y);
+        if (exist_loop == 1)
+            loops[dsu.find(x)] = 1; // 如果有环，则在根节点打上标记
+    }
+    set<int> st; // set保存各个连通图所在并查集的根节点
+    for (int i = 1; i <= n; i++)
+        st.insert(dsu.find(i));
+    // 答案即为不存在环的连通图的个数
+    int ans = 0;
+    for (auto it = st.begin(); it != st.end(); it++)
+        if (loops[*it] == 0)
+            ans++;
+    cout << ans << '\n';
+
+    return 0;
+}
