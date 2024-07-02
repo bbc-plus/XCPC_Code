@@ -1,0 +1,52 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+typedef long long ll;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    vector<i64> a(4);
+    for (int i = 0; i < 4; i++)
+    {
+        cin >> a[i];
+    }
+    vector<char> c(3);
+    for (int i = 0; i < 3; i++)
+    {
+        cin >> c[i];
+    }
+    i64 ans = LLONG_MAX;
+    auto dfs = [&](auto &&self, int idx, vector<i64> v)
+    {
+        if (idx == 3)
+        {
+            ans = min(ans, v[0]);
+            return;
+        }
+        for (int i = 0; i < v.size() - 1; i++)
+        {
+            for (int j = i + 1; j < v.size(); j++)
+            {
+                vector<i64> tmp;
+                for (int k = 0; k < v.size(); k++)
+                {
+                    if (k != i && k != j)
+                        tmp.push_back(v[k]);
+                }
+                if (c[idx] == '+')
+                    tmp.push_back(v[i] + v[j]);
+                else
+                    tmp.push_back(v[i] * v[j]);
+                self(self, idx + 1, tmp);
+            }
+        }
+        return;
+    };
+    dfs(dfs, 0, a);
+    cout << ans << '\n';
+
+    return 0;
+}
