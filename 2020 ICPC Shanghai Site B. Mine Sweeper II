@@ -1,0 +1,49 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m;
+    vector<vector<char>> a(n, vector<char>(m));
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            cin >> a[i][j];
+    vector<vector<char>> b(n, vector<char>(m));
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            cin >> b[i][j];
+    // 方案一：将B改成A
+    // 方案二：将B改成A的相反，即若A为地雷则改后的B为空地，反之改后的B为地雷
+    int cnt = 0; // 统计方案一需要的步数
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < m; j++)
+            if (a[i][j] != b[i][j])
+                cnt++;
+    if (cnt <= n * m / 2) // 如果方案一满足条件
+    {
+        // 输出方案一的结果
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < m; j++)
+                cout << a[i][j];
+            cout << '\n';
+        }
+    }
+    else // 如果方案一步数不满足条件，则根据鸽巢原理，方案二一定满足条件
+    {
+        // 输出方案二的结果
+        for (int i = 0; i < n; i++)
+        {
+            for (int j = 0; j < m; j++)
+                cout << ((a[i][j] == '.') ? 'X' : '.');
+            cout << '\n';
+        }
+    }
+
+    return 0;
+}
