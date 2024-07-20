@@ -1,0 +1,98 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using ULL = unsigned long long;
+
+const int MAX = 5e5 + 6;
+i64 a[MAX];
+i64 pre[MAX];
+
+vector<int> tr[21]; // 树状数组
+
+int lowbit(int x) // 获取低位2次幂数
+{
+    return x & -x;
+}
+
+void update(int num, int maxn, int x, int k) // 单点增加/减少
+{
+    x++;
+    while (x <= maxn)
+    {
+        tr[num][x] += k;
+        x += lowbit(x);
+    }
+}
+
+int query(int num, int x) // 前缀和查询
+{
+    x++;
+    int res = 0;
+    while (x)
+    {
+        res += tr[num][x];
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    for (int i = 0; i < 21; i++)
+    {
+        int p = 1 << (i + 1);
+        tr[i].resize(p + 6);
+    }
+    int q;
+    cin >> q;
+    int idx = 0;
+    while (q--)
+    {
+        i64 t, v;
+        cin >> t >> v;
+        for (int i = 1; i <= t; i++)
+        {
+            i64 x = pre[idx - 1];
+            for (int i = 0; i < 21; i++)
+            {
+                int p = 1 << (i + 1);
+                update(i, p, x % p, -1);
+            }
+            idx--;
+        }
+        a[++idx] = v;
+        pre[idx] = pre[idx - 1] + v;
+        for (int i = 0; i < 21; i++)
+        {
+            int p = 1 << (i + 1);
+            update(i, p, pre[idx - 1] % p, 1);
+        }
+        int ans = 0;
+        i64 sum = pre[idx];
+        for (int i = 0; i < 21; i++)
+        {
+            int p1 = 1 << i;
+            int p2 = 1 << (i + 1);
+            int yi = (sum >> i) & 1;
+            int res;
+            if (yi == 1)
+            {
+                res = query(i, sum % p1) + query(i, p2 - 1) - query(i, p1 + sum % p1);
+            }
+            else
+            {
+                res = query(i, p1 + sum % p1) - query(i, sum % p1);
+            }
+            if (res & 1)
+            {
+                ans += p1;
+            }
+        }
+        cout << ans << '\n';
+    }
+
+    return 0;
+}
