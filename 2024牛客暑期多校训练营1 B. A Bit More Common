@@ -1,0 +1,88 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+i64 MOD;
+
+int qpow(int a, int b, int p)
+{
+    int res = 1;
+    while (b)
+    {
+        if (b & 1)
+            res = (1ll * res * a) % p;
+        a = (1ll * a * a) % p;
+        b /= 2;
+    }
+    return res % p;
+}
+
+int C[5006][5006];
+int dp[5006][5006];
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m;
+    cin >> n >> m >> MOD;
+
+    C[0][0] = 1;
+    for (int i = 0; i <= max(n, m); i++)
+    {
+        for (int j = 0; j <= i; j++)
+        {
+            if (j == 0)
+                C[i][j] = 1;
+            else
+            {
+                C[i][j] = C[i - 1][j - 1] + C[i - 1][j];
+                C[i][j] %= MOD;
+            }
+        }
+    }
+
+    dp[0][0] = 1;
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = i; j <= m; j++)
+        {
+            dp[i][j] = 1ll * i * (dp[i][j - 1] + dp[i - 1][j - 1]) % MOD;
+        }
+    }
+
+    i64 ans1 = 0;
+    for (int k = 1; k <= n; k++)
+    {
+        ans1 += 1ll * C[n][k] * qpow(2, (n - k) * (m - 1), MOD) % MOD * qpow(((qpow(2, k, MOD) + MOD - 1) % MOD), m - 1, MOD) % MOD;
+        ans1 %= MOD;
+    }
+
+    i64 ans2 = 0;
+    for (int k = 2; k <= n; k++)
+    {
+        i64 tmp = 1ll * C[n][k] * qpow(2, (n - k) * (m - 1), MOD) % MOD;
+        i64 x = qpow(2, k, MOD) - k - 1;
+        x %= MOD;
+        x += MOD;
+        x %= MOD;
+        i64 st = 1 % MOD;
+        i64 sum = 0;
+        for (int t = m - 1; t >= k; t--)
+        {
+            sum += 1ll * C[m - 1][t] * dp[k][t] % MOD * st % MOD;
+            sum %= MOD;
+            st *= x;
+            st %= MOD;
+        }
+        ans2 += sum * tmp % MOD;
+        ans2 %= MOD;
+    }
+    ans2 += 1ll * C[n][1] * qpow(2, (n - 1) * (m - 1), MOD) % MOD;
+    ans2 %= MOD;
+
+    cout << ((ans1 - ans2) % MOD + MOD) % MOD;
+
+    return 0;
+}
