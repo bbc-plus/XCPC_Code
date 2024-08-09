@@ -1,0 +1,143 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int MAX = 1e5 + 6;
+struct node
+{
+    int to;
+    int id;
+};
+vector<node> e[MAX];
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, m, k;
+    cin >> n >> m >> k;
+
+    int l = (k + 2 - 1) / 2;
+
+    vector<pair<int, int>> bian(m + 1);
+    int u, v;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> u >> v;
+        e[u].push_back({v, i});
+        e[v].push_back({u, i});
+        bian[i] = {u, v};
+    }
+
+    vector<int> depth(n + 1, 0);
+
+    vector<int> vis(n + 1, 0);
+
+    vector<int> shu_bian(m + 1, 0);
+
+    vector<int> fa(n + 1, 0);
+
+    auto dfs = [&](auto self, int u, int dep) -> void
+    {
+        depth[u] = dep;
+        vis[u] = 1;
+        for (auto [v, idx] : e[u])
+        {
+            if (vis[v] == 1)
+                continue;
+            fa[v] = u;
+            shu_bian[idx] = 1;
+            self(self, v, dep + 1);
+        }
+        return;
+    };
+
+    fa[1] = -1;
+    dfs(dfs, 1, 1);
+
+    for (int i = 1; i <= m; i++)
+    {
+        if (shu_bian[i] == 1)
+            continue;
+        int dpth1 = depth[bian[i].first];
+        int dpth2 = depth[bian[i].second];
+        if (abs(dpth1 - dpth2) < k)
+        {
+            vector<int> ans;
+            if (dpth1 > dpth2)
+            {
+                int st = bian[i].first;
+                while (st != bian[i].second)
+                {
+                    ans.push_back(st);
+                    st = fa[st];
+                }
+                ans.push_back(st);
+            }
+            else
+            {
+                int st = bian[i].second;
+                while (st != bian[i].first)
+                {
+                    ans.push_back(st);
+                    st = fa[st];
+                }
+                ans.push_back(st);
+            }
+            cout << 2 << '\n';
+            cout << ans.size() << '\n';
+            for (int i = 0; i < ans.size(); i++)
+            {
+                cout << ans[i] << " \n"[i == ans.size() - 1];
+            }
+            return 0;
+        }
+    }
+
+    if (m == n - 1)
+    {
+        vector<int> odd, even;
+        for (int i = 1; i <= n; i++)
+        {
+            if (depth[i] & 1)
+                odd.push_back(i);
+            else
+                even.push_back(i);
+        }
+        cout << 1 << '\n';
+        if (odd.size() > even.size())
+        {
+            for (int i = 0; i < l; i++)
+            {
+                cout << odd[i] << " \n"[i == l - 1];
+            }
+        }
+        else
+        {
+            for (int i = 0; i < l; i++)
+            {
+                cout << even[i] << " \n"[i == l - 1];
+            }
+        }
+        return 0;
+    }
+
+    int pos = max_element(depth.begin() + 1, depth.end()) - depth.begin();
+    vector<int> put;
+    put.push_back(pos);
+    for (int i = 0; i < l - 1; i++)
+    {
+        pos = fa[pos];
+        pos = fa[pos];
+        put.push_back(pos);
+    }
+    cout << 1 << '\n';
+    for (int i = 0; i < put.size(); i++)
+    {
+        cout << put[i] << " \n"[i == put.size() - 1];
+    }
+
+    return 0;
+}
