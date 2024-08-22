@@ -1,0 +1,73 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    vector<int> v(10);
+    for (int i = 0; i < 10; i++)
+    {
+        cin >> v[i];
+    }
+    int n, m;
+    cin >> n >> m;
+    vector<int> weight(m + 1, 0);
+    vector<int> a(n), b(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i] >> b[i];
+        for (int j = a[i]; j <= m; j++)
+        {
+            weight[j] = max(weight[j], weight[j - a[i]] + b[i]);
+        }
+    }
+    vector<i64> val(m + 1, 0);
+    for (int i = 1; i <= m; i++)
+    {
+        if (weight[i] == 0)
+            continue;
+        double x = weight[i];
+        double y = i;
+        double rat = x / y;
+        for (double j = 0; j < 10; j += 1)
+        {
+            if (rat <= (j + 1) / 10)
+            {
+                val[i] = 1ll * v[j] * i;
+                break;
+            }
+        }
+    }
+    vector<i64> dp(m + 1, 0);
+    for (int i = 1; i <= m; i++)
+    {
+        if (val[i] == 0)
+            continue;
+        for (int j = i; j <= m; j++)
+        {
+            dp[j] = max(dp[j], dp[j - i] + val[i]);
+        }
+    }
+    i64 ans = 0;
+    for (int i = 1; i <= m; i++)
+    {
+        ans = max(ans, dp[i]);
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t = 1;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
