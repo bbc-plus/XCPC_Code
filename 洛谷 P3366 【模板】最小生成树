@@ -1,0 +1,87 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int MAXN = 5e3 + 6;
+const int MAXM = 2e5 + 6;
+const int inf = 1e9 + 6;
+struct node
+{
+    int to, w;
+};
+vector<node> e[MAXN];
+int n, m;
+int dis[MAXN];   // 当前最小生成树集合到其他点的最短距离
+int exist[MAXN]; // 是否存在于当前最小生成树集合
+int ans;         // 最小生成树边权总和
+
+int prim(int st)
+{
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    ans = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        dis[i] = inf;
+        exist[i] = 0;
+    }
+    // 加入起点
+    pq.push({0, st});
+    dis[st] = 0;
+    int cnt = 0;
+    while (!pq.empty() && cnt < n)
+    {
+        int curDis = pq.top().first;
+        int u = pq.top().second;
+        pq.pop();
+        if (exist[u] == 1)
+            continue;
+        cnt++;
+        ans += curDis;
+        exist[u] = 1;
+        for (auto v : e[u])
+        {
+            if (exist[v.to] == 1)
+                continue;
+            if (v.w < dis[v.to])
+            {
+                dis[v.to] = v.w;
+                pq.push({v.w, v.to});
+            }
+        }
+    }
+    if (cnt != n)
+        return -1;
+    return 0;
+}
+
+void solve()
+{
+    cin >> n >> m;
+    for (int i = 1; i <= m; i++)
+    {
+        int u, v, w;
+        cin >> u >> v >> w;
+        e[u].push_back({v, w});
+        e[v].push_back({u, w});
+    }
+    if (prim(1) == -1)
+        cout << "orz\n";
+    else
+        cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t = 1;
+    // cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
