@@ -1,0 +1,71 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 1), b(n + 1);
+    int sum1 = 0, sum2 = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        sum1 ^= a[i];
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> b[i];
+        sum2 ^= b[i];
+    }
+    vector<int> num(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        num[i] = a[i] ^ b[i];
+    }
+    vector<i64> base(31, 0);
+    for (int i = 1; i <= n; i++)
+    {
+        i64 x = num[i];
+        for (int j = 30; j >= 0; j--)
+        {
+            if ((x >> j) & 1)
+            {
+                if (base[j] == 0)
+                {
+                    base[j] = x;
+                    x = 0;
+                }
+                else
+                {
+                    x ^= base[j];
+                }
+            }
+        }
+    }
+    for (int j = 30; j >= 0; j--)
+    {
+        if (max(sum1 ^ base[j], sum2 ^ base[j]) < max(sum1, sum2))
+        {
+            sum1 ^= base[j];
+            sum2 ^= base[j];
+        }
+    }
+    cout << max(sum1, sum2) << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t = 1;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
