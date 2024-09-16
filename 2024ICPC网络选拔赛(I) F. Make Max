@@ -1,0 +1,123 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+struct DSU
+{
+    std::vector<int> f, siz;
+
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+
+    void init(int n)
+    {
+        f.resize(n);
+        std::iota(f.begin(), f.end(), 0);
+        siz.assign(n, 1);
+    }
+
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+
+    bool same(int x, int y)
+    {
+        return find(x) == find(y);
+    }
+
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+
+    int size(int x)
+    {
+        return siz[find(x)];
+    }
+};
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 2);
+    a[0] = 1e9 + 7;
+    a[n + 1] = 1e9 + 7;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+    DSU dsu(n + 2);
+    i64 ans = 0;
+    int p = 1;
+    while (1)
+    {
+        int _siz = dsu.size(p);
+        if (_siz == n)
+            break;
+        if (a[p] == a[p + 1])
+        {
+            dsu.merge(p, p + 1);
+            p++;
+        }
+        else if (a[p] > a[p + 1])
+        {
+            p++;
+        }
+        else if (a[p] < a[p + 1])
+        {
+            if (a[p - _siz] == a[p + 1])
+            {
+                ans += _siz;
+                int tmp = dsu.size(p + 1);
+                dsu.merge(p - _siz, p);
+                dsu.merge(p, p + 1);
+                p += tmp;
+            }
+            else if (a[p - _siz] < a[p + 1])
+            {
+                ans += _siz;
+                dsu.merge(p - _siz, p);
+            }
+            else if (a[p - _siz] > a[p + 1])
+            {
+                ans += _siz;
+                int tmp = dsu.size(p + 1);
+                dsu.merge(p, p + 1);
+                p += tmp;
+            }
+        }
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
