@@ -1,0 +1,161 @@
+// 主席树+树状数组
+
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int maxn = 5e5; // 数据范围
+// tot为树中元素下标，从1号根节点开始
+int tot, n;
+i64 k;
+// sum[]表示该节点对应区间的数值个数，rt[]记录历史线段树的根节点，ls记录左儿子，rs记录右二子
+int sum[(maxn << 5) + 10], rt[maxn + 10], ls[(maxn << 5) + 10], rs[(maxn << 5) + 10]; // 左移运算符是为了给记录历史线段树的过程开辟足够多的节点，需根据具体maxn的值修改（一般不必修改）
+// a[]为读入数组，ind[]为离散化后对应元素，len为离散化后元素个数
+int a[maxn + 10], ind[maxn + 10], len;
+
+int getid(const int &val) // 离散化
+{
+    return lower_bound(ind + 1, ind + len + 1, val) - ind;
+}
+
+int build(int l, int r) // 建树
+{
+    int root = ++tot;
+    if (l == r)
+        return root;
+    int mid = l + r >> 1;
+    ls[root] = build(l, mid);
+    rs[root] = build(mid + 1, r);
+    return root; // 返回该子树的根节点
+}
+
+int update(int k, int l, int r, int root) // 插入元素
+{
+    int dir = ++tot; // 当前节点下标
+    ls[dir] = ls[root], rs[dir] = rs[root], sum[dir] = sum[root] + 1;
+    if (l == r)
+        return dir;
+    int mid = l + r >> 1;
+    if (k <= mid)
+        ls[dir] = update(k, l, mid, ls[dir]);
+    else
+        rs[dir] = update(k, mid + 1, r, rs[dir]);
+    return dir;
+}
+
+int query(int u, int v, int l, int r, int k) // 查询操作
+{
+    int mid = l + r >> 1,
+        x = sum[ls[v]] - sum[ls[u]]; // 通过区间减法得到左儿子中所存储的数值个数
+    if (l == r)
+        return l;
+    if (k <= x) // 若 k 小于等于 x ，则说明第 k 小的数字存储在在左儿子中
+        return query(ls[u], ls[v], l, mid, k);
+    else // 否则说明在右儿子中
+        return query(rs[u], rs[v], mid + 1, r, k - x);
+}
+
+int max_num; // max_num为树状数组维护的区间上界
+
+i64 tr[maxn + 6]; // 权值区间的所有数的和
+int sz[maxn + 6]; // 权值区间的所有数的个数
+
+int lowbit(int x) // 获取低位2次幂数
+{
+    return x & -x;
+}
+
+void update(int x, int k, int cnt) // 单点增加/减少
+{
+    while (x <= max_num)
+    {
+        tr[x] += k;
+        sz[x] += cnt;
+        x += lowbit(x);
+    }
+}
+
+pair<int, i64> query(int x) // 前缀和查询
+{
+    i64 res2 = 0;
+    int res = 0;
+    while (x)
+    {
+        res2 += tr[x];
+        res += sz[x];
+        x -= lowbit(x);
+    }
+    return {res, res2};
+}
+
+void init() // 初始化主席树
+{
+    tot = 0;
+    cin >> n >> k;
+    for (int i = 1; i <= n; ++i)
+        cin >> a[i], a[i] -= i;
+    memcpy(ind, a, sizeof(ind));
+    // 离散化
+    sort(ind + 1, ind + n + 1);                   // 排序
+    len = unique(ind + 1, ind + n + 1) - ind - 1; // 去重，并记录不同元素的个数
+    rt[0] = build(1, len);                        // 建第一个线段树（尚未插入元素）
+    for (int i = 1; i <= n; ++i)
+        rt[i] = update(getid(a[i]), 1, len, rt[i - 1]); // 更新后续一个一个插入元素后的线段树
+    max_num = len;
+    for (int i = 1; i <= max_num; i++)
+    {
+        tr[i] = 0;
+        sz[i] = 0;
+    }
+}
+
+void solve()
+{
+    init();
+    int l = 1, r = 1;
+    update(lower_bound(ind + 1, ind + max_num + 1, a[1]) - ind, a[1], 1);
+    int ans = 1;
+    while (1)
+    {
+        while (1)
+        {
+            if (l == r)
+            {
+                r++;
+                update(lower_bound(ind + 1, ind + max_num + 1, a[r]) - ind, a[r], 1);
+                continue;
+            }
+            if (r > n)
+                break;
+            i64 midnum = ind[query(rt[l - 1], rt[r], 1, len, (r - l + 1 + 1) / 2)];
+            auto [sz1, sum1] = query(lower_bound(ind + 1, ind + max_num + 1, midnum) - ind - 1);
+            auto [sz2, sum2] = query(max_num);
+            i64 sum = sz1 * midnum - sum1 + (sum2 - sum1) - (sz2 - sz1) * midnum;
+            if (sum <= k)
+                ans = max(ans, r - l + 1), r++, update(lower_bound(ind + 1, ind + max_num + 1, a[r]) - ind, a[r], 1);
+            else
+                break;
+        }
+        if (r > n)
+            break;
+        update(lower_bound(ind + 1, ind + max_num + 1, a[l]) - ind, -a[l], -1);
+        l++;
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t = 1;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
