@@ -1,0 +1,146 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const i64 INF = 1e18;
+const int N = 5e5 + 7;
+const int M = 1e6 + 7;
+int head[N], nex[M], ver[M], tot = 1;
+i64 edge[M];
+int n, m, s, t;
+i64 maxflow;
+i64 deep[N];
+int now[M];
+queue<int> q;
+inline void add(int x, int y, int z)
+{
+    ver[++tot] = y;
+    edge[tot] = z;
+    nex[tot] = head[x];
+    head[x] = tot;
+    ver[++tot] = x;
+    edge[tot] = 0;
+    nex[tot] = head[y];
+    head[y] = tot;
+}
+inline bool bfs()
+{
+    for (int i = 1; i <= n; i++)
+    {
+        deep[i] = INF;
+    }
+    while (!q.empty())
+        q.pop();
+    q.push(s);
+    deep[s] = 0;
+    now[s] = head[s];
+    while (!q.empty())
+    {
+        int x = q.front();
+        q.pop();
+        for (int i = head[x]; i; i = nex[i])
+        {
+            int y = ver[i];
+            if (edge[i] > 0 && deep[y] == INF)
+            {
+                q.push(y);
+                now[y] = head[y];
+                deep[y] = deep[x] + 1;
+                if (y == t)
+                    return 1;
+            }
+        }
+    }
+    return 0;
+}
+i64 dfs(int x, i64 flow)
+{
+    if (x == t)
+        return flow;
+    i64 ans = 0, k, i;
+    for (i = now[x]; i && flow; i = nex[i])
+    {
+        now[x] = i;
+        int y = ver[i];
+        if (edge[i] > 0 && (deep[y] == deep[x] + 1))
+        {
+            k = dfs(y, min(flow, edge[i]));
+            if (!k)
+                deep[y] = INF;
+            edge[i] -= k;
+            edge[i ^ 1] += k;
+            ans += k;
+            flow -= k;
+        }
+    }
+    return ans;
+}
+void dinic()
+{
+    while (bfs())
+        maxflow += dfs(s, INF);
+}
+
+void solve()
+{
+    while (!q.empty())
+        q.pop();
+    maxflow = 0;
+    tot = 1;
+    cin >> n >> m;
+    s = 2 * n + 1;
+    t = 2 * n + 2;
+    for (int i = 1; i <= m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        add(u, v + n, 1);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        add(s, i, 1);
+        add(i + n, t, 1);
+    }
+    int last_n = n;
+    n = 2 * n + 2;
+    dinic();
+    vector<int> ans(2, 0);
+    vector<int> vis(n + 1, 0);
+    auto dfs = [&](auto self, int u, int val) -> void
+    {
+        if (u != s && u != t)
+            ans[val] += val ? (u <= last_n) : u > last_n;
+        vis[u] = 1;
+        for (int i = head[u]; i; i = nex[i])
+        {
+            int y = ver[i];
+            i64 w = edge[i];
+            if (vis[y] || w != val)
+                continue;
+            self(self, y, val);
+        }
+    };
+    dfs(dfs, s, 1);
+    dfs(dfs, t, 0);
+    cout << 1ll * ans[0] * ans[1] << '\n';
+    for (int i = 1; i <= n; i++)
+    {
+        head[i] = 0;
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t;
+    cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
