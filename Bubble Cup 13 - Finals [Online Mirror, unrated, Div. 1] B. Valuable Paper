@@ -1,0 +1,138 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct HopcroftKarp
+{
+    vector<vector<int>> g;
+    vector<int> pa, pb, vis;
+    int n, m, dfn, res;
+    HopcroftKarp(int _n, int _m) : n(_n + 1), m(_m + 1)
+    {
+        assert(0 <= n && 0 <= m);
+        pa.assign(n, -1);
+        pb.assign(m, -1);
+        vis.resize(n);
+        g.resize(n);
+        res = 0;
+        dfn = 0;
+    }
+    void add(int x, int y)
+    {
+        assert(0 <= x && x < n && 0 <= y && y < m);
+        g[x].push_back(y);
+    }
+    bool dfs(int v)
+    {
+        vis[v] = dfn;
+        for (int u : g[v])
+        {
+            if (pb[u] == -1)
+            {
+                pb[u] = v;
+                pa[v] = u;
+                return true;
+            }
+        }
+        for (int u : g[v])
+        {
+            if (vis[pb[u]] != dfn && dfs(pb[u]))
+            {
+                pa[v] = u;
+                pb[u] = v;
+                return true;
+            }
+        }
+        return false;
+    }
+    int work()
+    {
+        while (1)
+        {
+            dfn++;
+            int cnt = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (pa[i] == -1 && dfs(i))
+                {
+                    cnt++;
+                }
+            }
+            if (cnt == 0)
+                break;
+            res += cnt;
+        }
+        return res;
+    }
+};
+
+struct node
+{
+    int u, v, f;
+};
+
+void solve()
+{
+    int n, m, s, t;
+    cin >> n >> m;
+    vector<node> tmp(m + 1);
+    set<int> st;
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> tmp[i].u >> tmp[i].v >> tmp[i].f;
+        st.insert(tmp[i].f);
+    }
+    s = 0, t = 2 * n + 1;
+    auto check = [&](int mid) -> bool
+    {
+        HopcroftKarp flow(n, n);
+        for (int i = 1; i <= m; i++)
+        {
+            if (tmp[i].f <= mid)
+            {
+                flow.add(tmp[i].u, tmp[i].v);
+            }
+        }
+        if (flow.work() == n)
+            return 1;
+        return 0;
+    };
+    vector<int> d;
+    for (auto x : st)
+    {
+        d.push_back(x);
+    }
+    int l = 0, r = d.size() - 1;
+    while (l < r)
+    {
+        int mid = (l + r) >> 1;
+        if (check(d[mid]))
+        {
+            r = mid;
+        }
+        else
+        {
+            l = mid + 1;
+        }
+    }
+    if (check(d[l]))
+        cout << d[l] << '\n';
+    else
+        cout << -1 << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int t = 1;
+    // cin >> t;
+    while (t--)
+    {
+        solve();
+    }
+
+    return 0;
+}
