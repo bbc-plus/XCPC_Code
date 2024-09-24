@@ -1,0 +1,82 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int MOD = 998244353;
+
+int qpow(int a, int b, int p)
+{
+    int res = 1;
+    while (b)
+    {
+        if (b & 1)
+            res = 1LL * res * a % p;
+        a = 1LL * a * a % p;
+        b >>= 1;
+    }
+    return res;
+}
+
+int inv(int x)
+{
+    return qpow(x, MOD - 2, MOD);
+}
+
+void solve()
+{
+    i64 x, y;
+    cin >> x >> y;
+    i64 a, b, c;
+    cin >> a >> b >> c;
+    c = inv(a + b);
+    i64 ans = 0;
+    i64 mul = 1;
+    while (1)
+    {
+        if (x == y)
+        {
+            mul *= a * c % MOD;
+            mul %= MOD;
+            ans += mul;
+            ans %= MOD;
+            break;
+        }
+        else if (x > y)
+        {
+            i64 last = mul;
+            i64 cnt = (x + y - 1) / y - 1;
+            i64 tmp1 = qpow(b, cnt, MOD);
+            i64 tmp2 = qpow(c, cnt, MOD);
+            mul *= tmp1 * tmp2 % MOD;
+            mul %= MOD;
+            ans += (last - mul + MOD) % MOD;
+            ans %= MOD;
+            x -= cnt * y;
+        }
+        else
+        {
+            i64 cnt = (y + x - 1) / x - 1;
+            i64 tmp1 = qpow(a, cnt, MOD);
+            i64 tmp2 = qpow(c, cnt, MOD);
+            mul *= tmp1 * tmp2 % MOD;
+            mul %= MOD;
+            y -= cnt * x;
+        }
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
