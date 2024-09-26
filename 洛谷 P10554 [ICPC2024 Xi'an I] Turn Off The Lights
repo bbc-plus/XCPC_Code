@@ -1,0 +1,100 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, k;
+    cin >> n >> k;
+    vector<bitset<1001>> v(n + 1);
+    bitset<1001> base;
+    base.set();
+    for (int i = 1; i <= n; i++)
+    {
+        base[i] = 0;
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            int x;
+            cin >> x;
+            v[j][i] = x;
+        }
+    }
+    for (int j = 1; j <= n; j++)
+    {
+        int cnt = 0;
+        for (int k = 1; k <= n; k++)
+        {
+            if (k != j)
+            {
+                auto tmp = v[k];
+                tmp.flip();
+                tmp ^= base;
+                tmp ^= v[j];
+                auto tmp2 = v[k] ^ v[j];
+                cnt += min(tmp.count(), tmp2.count());
+            }
+        }
+        if (cnt <= k)
+        {
+            vector<pair<int, int>> ans;
+            for (int k = 1; k <= n; k++)
+            {
+                if (k != j)
+                {
+                    auto tmp = v[k];
+                    tmp.flip();
+                    tmp ^= base;
+                    tmp ^= v[j];
+                    auto tmp2 = v[k] ^ v[j];
+                    if (tmp.count() < tmp2.count())
+                    {
+                        v[k].flip();
+                        v[k] ^= base;
+                        ans.push_back({0, k});
+                    }
+                    for (int i = 1; i <= n; i++)
+                    {
+                        if (v[k][i] != v[j][i])
+                        {
+                            ans.push_back({i, k});
+                        }
+                    }
+                }
+            }
+            for (int i = 1; i <= n; i++)
+            {
+                if (v[j][i] == 1)
+                {
+                    ans.push_back({i, 0});
+                }
+            }
+            cout << ans.size() << '\n';
+            for (int i = 0; i < ans.size(); i++)
+            {
+                cout << ans[i].first << ' ' << ans[i].second << '\n';
+            }
+            return;
+        }
+    }
+    cout << -1 << '\n';
+    return;
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
