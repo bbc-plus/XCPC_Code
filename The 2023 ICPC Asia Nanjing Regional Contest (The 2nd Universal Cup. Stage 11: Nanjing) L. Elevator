@@ -1,0 +1,64 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+void solve()
+{
+    int n, w;
+    i64 k;
+    cin >> n >> k;
+    vector<pair<int, int>> a(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i].second >> w >> a[i].first;
+        if (w == 2)
+            a[i].second *= 2;
+    }
+    sort(a.begin(), a.end(), greater<pair<int, int>>());
+    i64 ans = 0;
+    for (int i = 0; i < n; i++)
+    {
+        if (a[i].second == 0)
+            continue;
+        i64 cnt = a[i].second / k;
+        i64 left = (a[i].second % k == 0) ? 0 : k - a[i].second % k;
+        ans += (cnt + (left == 0 ? 0 : 1)) * a[i].first;
+        if (left & 1)
+        {
+            for (int j = i + 1; j < n; j++)
+            {
+                if (a[j].second & 1)
+                {
+                    left--;
+                    a[j].second--;
+                    break;
+                }
+            }
+        }
+        for (int j = i + 1; j < n; j++)
+        {
+            if (left == 0)
+                break;
+            if (left >= a[j].second)
+                left -= a[j].second, a[j].second = 0;
+            else
+                a[j].second -= left, left = 0;
+        }
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
