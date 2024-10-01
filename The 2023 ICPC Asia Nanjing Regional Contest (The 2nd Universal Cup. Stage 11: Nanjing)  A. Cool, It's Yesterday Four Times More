@@ -1,0 +1,105 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<string> g(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> g[i];
+    }
+    vector<vector<int>> vis(n, vector<int>(m, 0));
+    auto ok = [&](int x, int y) -> bool
+    {
+        if (x < 0 || x >= n || y < 0 || y >= m)
+            return 0;
+        if (g[x][y] == 'O')
+            return 0;
+        return 1;
+    };
+    pair<int, int> dif[4] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    vector<pair<int, int>> dis;
+    int sx = -1, sy = -1;
+    auto dfs = [&](auto self, int x, int y) -> void
+    {
+        vis[x][y] = 1;
+        for (auto [dx, dy] : dif)
+        {
+            int nx = x + dx;
+            int ny = y + dy;
+            if (ok(nx, ny) && vis[nx][ny] == 0)
+            {
+                dis.push_back({nx - sx, ny - sy});
+                self(self, nx, ny);
+            }
+        }
+    };
+    int ans = 0;
+    int block = 0;
+    int last = 0;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (ok(i, j) == 0 || vis[i][j] == 1)
+                continue;
+            block++;
+            dis.clear();
+            sx = i;
+            sy = j;
+            dfs(dfs, i, j);
+            bool excape = 0;
+            for (int ii = 0; ii < n; ii++)
+            {
+                for (int jj = 0; jj < m; jj++)
+                {
+                    if ((ii == i && jj == j) || (ok(ii, jj) == 0))
+                        continue;
+                    bool flag = 1;
+                    for (auto [di, dj] : dis)
+                    {
+                        int ni = ii + di;
+                        int nj = jj + dj;
+                        if (ok(ni, nj) == 0)
+                        {
+                            flag = 0;
+                            break;
+                        }
+                    }
+                    if (flag == 1)
+                    {
+                        excape = 1;
+                        break;
+                    }
+                }
+                if (excape == 1)
+                    break;
+            }
+            if (excape == 0)
+                ans += dis.size() + 1;
+            last = dis.size() + 1;
+        }
+    }
+    if (block <= 1)
+        cout << last << '\n';
+    else
+        cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
