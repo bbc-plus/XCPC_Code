@@ -1,0 +1,75 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    i64 n;
+    cin >> n;
+    vector<i64> a(n);
+    for (i64 i = 0; i < n; ++i)
+        cin >> a[i];
+    i64 ans = -accumulate(a.begin(), a.end(), 0LL);
+    i64 max_ai = 0;
+
+    map<i64, i64> s, t;
+    s[-1] = t[-1] = 0;
+    s[n] = t[n] = 1e18;
+
+    auto update = [&](map<i64, i64> &st, i64 i, i64 ai) -> void
+    {
+        auto j = prev(st.upper_bound(i));
+        if (j->second >= ai)
+            return;
+
+        st[i] = j->second;
+        auto it = st.find(i);
+        while (it->second < ai)
+        {
+            i64 len = next(it)->first - it->first;
+            ans -= it->second * len;
+            it = st.erase(it);
+        }
+        ans += ai * (it->first - i);
+        st[i] = ai;
+    };
+
+    for (i64 i = 0; i < n; ++i)
+    {
+        max_ai = max(max_ai, a[i]);
+        update(s, i, a[i]);
+        update(t, n - 1 - i, a[i]);
+    }
+    i64 q;
+    cin >> q;
+    while (q--)
+    {
+        i64 i, v;
+        cin >> i >> v;
+        --i;
+        a[i] += v;
+        ans -= v;
+
+        max_ai = max(max_ai, a[i]);
+        update(s, i, a[i]);
+        update(t, n - 1 - i, a[i]);
+
+        cout << ans - max_ai * n << '\n';
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
