@@ -1,0 +1,76 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct node
+{
+    int l, r, val;
+};
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<node> q(m);
+    vector<vector<int>> v(30, vector<int>(n + 2, 0));
+    vector<vector<int>> p(30, vector<int>(n + 2, 0));
+    vector<vector<int>> zero(30, vector<int>(n + 2, 0));
+    vector<int> ans(n + 1, 0);
+    for (int i = 0; i < m; i++)
+    {
+        cin >> q[i].l >> q[i].r >> q[i].val;
+        for (int j = 0; j < 30; j++)
+        {
+            if ((q[i].val >> j) & 1)
+            {
+                v[j][q[i].l]++;
+                v[j][q[i].r + 1]--;
+            }
+        }
+    }
+    for (int j = 0; j < 30; j++)
+    {
+        for (int i = 1; i <= n; i++)
+        {
+            p[j][i] = p[j][i - 1] + v[j][i];
+            if (p[j][i] != 0)
+                ans[i] |= (1 << j);
+            zero[j][i] = zero[j][i - 1] + (p[j][i] == 0);
+        }
+    }
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < 30; j++)
+        {
+            if (!((q[i].val >> j) & 1))
+            {
+                if (zero[j][q[i].r] - zero[j][q[i].l - 1] == 0)
+                {
+                    cout << "NO\n";
+                    return;
+                }
+            }
+        }
+    }
+    cout << "YES\n";
+    for (int i = 1; i <= n; i++)
+    {
+        cout << ans[i] << " \n"[i == n];
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
