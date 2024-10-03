@@ -1,0 +1,90 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+using LD = long double;
+
+LD len(LD x1, LD y1, LD x2, LD y2)
+{
+    return sqrtl(powl(x1 - x2, 2) + powl(y1 - y2, 2));
+}
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    if (n == 0)
+    {
+        cout << 0 << ' ' << 1 << '\n';
+        cout << 0 << ' ' << m << '\n';
+        cout << 0 << ' ' << 0 << '\n';
+        cout << 0 << ' ' << m - 1 << '\n';
+    }
+    else if (m == 0)
+    {
+        cout << 1 << ' ' << 0 << '\n';
+        cout << n << ' ' << 0 << '\n';
+        cout << 0 << ' ' << 0 << '\n';
+        cout << n - 1 << ' ' << 0 << '\n';
+    }
+    else
+    {
+        int x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6, x7, y7, x8, y8;
+        if (n >= m)
+        {
+            x1 = 0, y1 = m - 1;
+            x2 = n, y2 = 0;
+            x3 = 0, y3 = m;
+            x4 = n, y4 = 1;
+
+            x5 = n, y5 = m;
+            x6 = 0, y6 = 0;
+            x7 = n, y7 = 0;
+            x8 = 0, y8 = m;
+        }
+        else
+        {
+            x1 = n - 1, y1 = 0;
+            x2 = 0, y2 = m;
+            x3 = n, y3 = 0;
+            x4 = 1, y4 = m;
+
+            x5 = n, y5 = m;
+            x6 = 0, y6 = 0;
+            x7 = 0, y7 = m;
+            x8 = n, y8 = 0;
+        }
+
+        LD sum1 = len(x1, y1, x2, y2) + len(x2, y2, x3, y3) + len(x3, y3, x4, y4);
+        LD sum2 = len(x5, y5, x6, y6) + len(x6, y6, x7, y7) + len(x7, y7, x8, y8);
+        if (sum1 >= sum2)
+        {
+            cout << x1 << ' ' << y1 << '\n';
+            cout << x2 << ' ' << y2 << '\n';
+            cout << x3 << ' ' << y3 << '\n';
+            cout << x4 << ' ' << y4 << '\n';
+        }
+        else
+        {
+            cout << x5 << ' ' << y5 << '\n';
+            cout << x6 << ' ' << y6 << '\n';
+            cout << x7 << ' ' << y7 << '\n';
+            cout << x8 << ' ' << y8 << '\n';
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
