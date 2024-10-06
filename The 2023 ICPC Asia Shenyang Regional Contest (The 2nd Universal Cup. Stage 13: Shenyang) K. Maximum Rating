@@ -1,0 +1,180 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int maxn = 4e5 + 6;
+
+int max_num;
+
+int tr[maxn];
+i64 tr2[maxn];
+map<int, int> mp;
+map<int, int> id;
+
+int lowbit(int x)
+{
+    return x & -x;
+}
+
+void update2(int x, i64 k)
+{
+    while (x <= max_num)
+    {
+        tr2[x] += k;
+        x += lowbit(x);
+    }
+}
+
+i64 query2(int x)
+{
+    i64 res = 0;
+    while (x)
+    {
+        res += tr2[x];
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+void update(int x, int k)
+{
+    while (x <= max_num)
+    {
+        tr[x] += k;
+        x += lowbit(x);
+    }
+}
+
+int query(int x)
+{
+    int res = 0;
+    while (x)
+    {
+        res += tr[x];
+        x -= lowbit(x);
+    }
+    return res;
+}
+
+struct node
+{
+    int x, v;
+};
+
+void solve()
+{
+    int n, q;
+    cin >> n >> q;
+    vector<int> a(n);
+    vector<node> qq(q);
+    int fu = 0;
+    int cnt = 0;
+    i64 sum = 0;
+    vector<int> tot_num;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i];
+        tot_num.push_back(a[i]);
+    }
+    for (int i = 0; i < q; i++)
+    {
+        cin >> qq[i].x >> qq[i].v;
+        tot_num.push_back(qq[i].v);
+    }
+    sort(tot_num.begin(), tot_num.end());
+    max_num = tot_num.size();
+    for (int i = tot_num.size() - 1; i >= 0; i--)
+    {
+        id[tot_num[i]] = i + 1;
+    }
+    for (int i = 0; i < n; i++)
+    {
+        mp[a[i]]++;
+        sum += a[i];
+        if (a[i] < 0)
+        {
+            fu++;
+        }
+        else if (a[i] > 0)
+        {
+            cnt++;
+        }
+        int numk = id[a[i]] + mp[a[i]] - 1;
+        update(numk, 1);
+        update2(numk, a[i]);
+    }
+    for (int i = 0; i < q; i++)
+    {
+        int x = qq[i].x;
+        int v = qq[i].v;
+        x--;
+        sum -= a[x];
+        int numk = id[a[x]] + mp[a[x]] - 1;
+        update(numk, -1);
+        update2(numk, -a[x]);
+        mp[a[x]]--;
+        sum += v;
+        mp[v]++;
+        numk = id[v] + mp[v] - 1;
+        update(numk, 1);
+        update2(numk, v);
+        if (a[x] < 0)
+        {
+            fu--;
+        }
+        else if (a[x] > 0)
+        {
+            cnt--;
+        }
+        a[x] = v;
+        if (v < 0)
+        {
+            fu++;
+        }
+        else if (v > 0)
+        {
+            cnt++;
+        }
+        if (fu == 0 || cnt == 0)
+        {
+            cout << 1 << '\n';
+        }
+        else if (sum <= 0)
+        {
+            cout << cnt + 1 << '\n';
+        }
+        else
+        {
+            int l = 1, r = max_num;
+            while (l < r)
+            {
+                int mid = (l + r) >> 1;
+                if (query2(mid) > 0)
+                {
+                    r = mid;
+                }
+                else
+                {
+                    l = mid + 1;
+                }
+            }
+            cout << cnt - (n - query(l)) << '\n';
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
