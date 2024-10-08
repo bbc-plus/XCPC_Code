@@ -1,0 +1,141 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int maxn = 2e5 + 6;
+const int maxm = 2e5 + 6;
+
+struct edge
+{
+    int to, len; // to为边的指向，len为边的长度即边权
+};
+
+vector<edge> e[maxn]; // 存储以点i为起点的边
+
+struct node
+{
+    i64 dis; // dis为目前到该点的最短路长度
+    int num; // num为该点序号
+    int horse;
+    bool operator>(const node &a) const // 小根堆中的大于号重载
+    {
+        return dis > a.dis;
+    }
+};
+
+i64 minDis1[maxn], minDis2[maxn]; // 从起点到第i个点的最短路长度
+i64 minHorse1[maxn], minHorse2[maxn];
+int horse[maxn];
+bool vis[maxn]; // 第i个点是否已确定最短路长度
+bool vis2[maxn];
+const i64 INF = 1e16; // INF的值具体问题具体修改
+
+void dijkstra(int n, int s, i64 *minDis, i64 *minHorse) // n为点的个数，s为起点
+{
+    priority_queue<node, vector<node>, greater<node>> pq; // 还未确定最短路长度的点存放在小根堆中
+    for (int i = 1; i <= n; i++)
+    {
+        minDis[i] = INF;
+        minHorse[i] = INF;
+        vis[i] = 0;
+        vis2[i] = 0;
+    }
+    minDis[s] = 0; // 起点到起点的最短路长度为0
+    if (horse[s] == 1)
+        minHorse[s] = 0;
+    pq.push({0, s, 0});
+    while (!pq.empty())
+    {
+        int u = pq.top().num; // 有向边的起点
+        int opt = pq.top().horse;
+        pq.pop();
+        if (vis2[u] == 1)
+            continue;
+        if (vis[u] == 1 && opt == 0) // 若该点已确定最短路长度，跳过
+            continue;
+        vis[u] = 1;
+        if (opt == 1)
+            vis2[u] = 1;
+        for (edge eg : e[u]) // 遍历以该点为起点的所有有向边
+        {
+            int v = eg.to;
+            if (opt == 1)
+            {
+                int w = eg.len / 2;
+                if (minHorse[v] > minHorse[u] + w) // 更新最短路长度
+                {
+                    minHorse[v] = minHorse[u] + w;
+                    pq.push({minHorse[v], v, 1});
+                }
+            }
+            else if (horse[u] == 1)
+            {
+                int w = eg.len / 2;
+                if (minHorse[v] > minDis[u] + w) // 更新最短路长度
+                {
+                    minHorse[v] = minDis[u] + w;
+                    pq.push({minHorse[v], v, 1});
+                }
+            }
+            else
+            {
+                int w = eg.len;
+                if (minDis[v] > minDis[u] + w) // 更新最短路长度
+                {
+                    minDis[v] = minDis[u] + w;
+                    pq.push({minDis[v], v, 0});
+                }
+            }
+        }
+    }
+}
+
+void solve()
+{
+    int n, m, h;
+    cin >> n >> m >> h;
+    for (int i = 1; i <= n; i++)
+    {
+        horse[i] = 0;
+        e[i].clear();
+    }
+    int u, v, w, pos;
+    for (int i = 1; i <= h; i++)
+    {
+        cin >> pos;
+        horse[pos] = 1;
+    }
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> u >> v >> w;
+        e[u].push_back({v, w});
+        e[v].push_back({u, w});
+    }
+    dijkstra(n, 1, minDis1, minHorse1);
+    dijkstra(n, n, minDis2, minHorse2);
+    i64 ans = INF;
+    for (int i = 1; i <= n; i++)
+    {
+        ans = min(ans, max(min(minDis1[i], minHorse1[i]), min(minDis2[i], minHorse2[i])));
+    }
+    if (ans >= INF)
+        cout << -1 << '\n';
+    else
+        cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
