@@ -1,0 +1,182 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct hash_val
+{
+    const int P = 13331;
+    vector<u64> num, Hash;
+    template <typename T>
+    hash_val(vector<T> v)
+    {
+        init(v);
+    }
+    template <typename T>
+    void init(vector<T> v)
+    {
+        int len = v.size();
+        num.resize(len + 1);
+        Hash.resize(len + 1);
+        num[0] = 1, Hash[0] = 0;
+        for (int i = 1; i <= len; i++)
+        {
+            num[i] = num[i - 1] * P;
+            Hash[i] = Hash[i - 1] * P + v[i - 1];
+        }
+    }
+    u64 get_interval(int l, int r)
+    {
+        return Hash[r] - Hash[l - 1] * num[r - l + 1];
+    }
+};
+
+void solve()
+{
+    auto id = [](char c) -> int
+    {
+        if (c >= 'a' && c <= 'z')
+            return c - 'a';
+        else
+            return c - 'A' + 26;
+    };
+    auto rid = [](int x) -> char
+    {
+        if (x < 26)
+            return x + 'a';
+        else
+            return x - 26 + 'A';
+    };
+    int n;
+    cin >> n;
+    vector<string> in(n * n);
+    vector<array<int, 3>> in_cnt(n);
+    for (int i = 0; i < n * n; i++)
+    {
+        cin >> in[i];
+        if (in[i].size() == 2)
+        {
+            in_cnt[id(in[i][0])][0]++;
+            in_cnt[id(in[i][1])][1]++;
+            if (in[i][0] == in[i][1])
+            {
+                in_cnt[id(in[i][0])][2]++;
+            }
+        }
+        else
+        {
+            in_cnt[id(in[i][0])][1]++;
+        }
+    }
+    vector<array<int, 3>> std_cnt(n);
+    vector<int> std_num;
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            int x = i * j;
+            std_num.push_back(x);
+            vector<int> tmp;
+            if (x / n != 0)
+                tmp.push_back(x / n);
+            tmp.push_back(x % n);
+            if (tmp.size() == 2)
+            {
+                std_cnt[tmp[0]][0]++;
+                std_cnt[tmp[1]][1]++;
+                if (tmp[0] == tmp[1])
+                {
+                    std_cnt[tmp[0]][2]++;
+                }
+            }
+            else
+            {
+                std_cnt[tmp[0]][1]++;
+            }
+        }
+    }
+    auto get = [&](array<int, 3> tmp) -> u64
+    {
+        vector<int> cnt(3, 0);
+        for (int i = 0; i < 3; i++)
+        {
+            cnt[i] = tmp[i];
+        }
+        hash_val num(cnt);
+        return num.get_interval(1, 3);
+    };
+    vector<u64> num1(n), num2(n);
+    for (int i = 0; i < n; i++)
+    {
+        num1[i] = get(std_cnt[i]);
+        num2[i] = get(in_cnt[i]);
+    }
+    string ans;
+    ans.assign(n, ' ');
+    vector<int> rmp(n, 0);
+    vector<int> vis(n, 0);
+    sort(std_num.begin(), std_num.end());
+    auto check = [&]() -> bool
+    {
+        vector<int> in_num;
+        for (string s : in)
+        {
+            int val = 0;
+            for (char c : s)
+            {
+                val *= n;
+                val += rmp[id(c)];
+            }
+            in_num.push_back(val);
+        }
+        sort(in_num.begin(), in_num.end());
+        for (int i = 0; i < n * n; i++)
+        {
+            if (std_num != in_num)
+                return false;
+        }
+        return true;
+    };
+    auto dfs = [&](auto self, int pos) -> bool
+    {
+        if (pos == n)
+        {
+            if (check())
+                return true;
+            else
+                return false;
+        }
+        for (int i = 0; i < n; i++)
+        {
+            if (!vis[i] && num1[pos] == num2[i])
+            {
+                ans[pos] = rid(i);
+                rmp[i] = pos;
+                vis[i] = 1;
+                if (self(self, pos + 1) == 1)
+                    return true;
+                vis[i] = 0;
+                rmp[i] = 0;
+                ans[pos] = ' ';
+            }
+        }
+        return false;
+    };
+    dfs(dfs, 0);
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
