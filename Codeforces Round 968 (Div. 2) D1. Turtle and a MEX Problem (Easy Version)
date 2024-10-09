@@ -1,0 +1,62 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> a(n);
+    int max2 = 0;
+    for (int i = 0; i < n; i++)
+    {
+        auto &v = a[i];
+        int len;
+        cin >> len;
+        v.resize(len, 0);
+        map<int, int> mp;
+        int cur = 0;
+        for (auto &x : v)
+        {
+            cin >> x;
+            mp[x] = 1;
+            while (mp[cur] == 1)
+            {
+                cur++;
+            }
+        }
+        int cur2 = cur + 1;
+        while (mp[cur2] == 1)
+        {
+            cur2++;
+        }
+        max2 = max(max2, cur2);
+    }
+    i64 ans = 0;
+    for (int k = 0; k <= m; k++)
+    {
+        if (k >= max2)
+        {
+            ans += 1LL * (m - k + 1) * (m + k) / 2;
+            break;
+        }
+        ans += max(max2, k);
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
