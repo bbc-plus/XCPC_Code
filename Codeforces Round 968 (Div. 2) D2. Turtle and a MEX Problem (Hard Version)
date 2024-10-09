@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct DSU
+{
+    std::vector<int> f, siz;
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+    void init(int n)
+    {
+        f.resize(n);
+        std::iota(f.begin(), f.end(), 0);
+        siz.assign(n, 1);
+    }
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+    bool same(int x, int y)
+    {
+        return find(x) == find(y);
+    }
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+    int size(int x)
+    {
+        return siz[find(x)];
+    }
+};
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> a(n);
+    vector<array<int, 2>> mex(n);
+    map<int, int> out_degree;
+    int max1 = 0;
+    int max2 = 0;
+    int max3 = 0;
+    for (int i = 0; i < n; i++)
+    {
+        auto &v = a[i];
+        int len;
+        cin >> len;
+        v.resize(len, 0);
+        map<int, int> mp;
+        int cur = 0;
+        for (auto &x : v)
+        {
+            cin >> x;
+            mp[x] = 1;
+            while (mp[cur] == 1)
+            {
+                cur++;
+            }
+        }
+        int cur2 = cur + 1;
+        while (mp[cur2] == 1)
+        {
+            cur2++;
+        }
+        mex[i][0] = cur;
+        mex[i][1] = cur2;
+        out_degree[cur]++;
+        max1 = max(max1, cur);
+        max2 = max(max2, cur2);
+    }
+    DSU dsu(max2 + 1);
+    vector<int> cur_max(max2 + 1, 0);
+    iota(cur_max.begin(), cur_max.end(), 0);
+    for (int i = 0; i < n; i++)
+    {
+        int cur = mex[i][0];
+        int cur2 = mex[i][1];
+        int maxn = max(cur_max[dsu.find(cur)], cur_max[dsu.find(cur2)]);
+        dsu.merge(cur, cur2);
+        cur_max[dsu.find(cur)] = maxn;
+    }
+    for (auto [x, y] : out_degree)
+    {
+        if (y >= 2)
+        {
+            max3 = max(max3, cur_max[dsu.find(x)]);
+        }
+    }
+    i64 ans = 0;
+    for (int k = 0; k <= m; k++)
+    {
+        if (k >= max2)
+        {
+            ans += 1LL * (m - k + 1) * (m + k) / 2;
+            break;
+        }
+        ans += max({max1, max3, cur_max[dsu.find(k)], k});
+    }
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
