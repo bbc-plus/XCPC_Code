@@ -1,0 +1,66 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    i64 n, k, mod;
+    cin >> n >> k >> mod;
+    auto qpow = [&](i64 x, i64 p) -> i64
+    {
+        i64 res = 1;
+        while (p)
+        {
+            if (p & 1)
+                res = res * x % mod;
+            p >>= 1;
+            x = x * x % mod;
+        }
+        return res;
+    };
+    vector<vector<i64>> dp(n + 1, vector<i64>(k + 1));
+    vector<i64> _2(n);
+    _2[0] = 1;
+    for (int i = 1; i < n; i++)
+    {
+        _2[i] = _2[i - 1] * 2 % mod;
+    }
+    for (int j = 0; j <= k; j++)
+    {
+        dp[0][j] = 1;
+    }
+    for (int i = 1; i < n; i++)
+    {
+        vector<i64> tmp(k + 1, 1);
+        for (int j = 1; j <= k; j++)
+        {
+            tmp[j] = tmp[j - 1] * (_2[i] - 2 + j + mod) % mod;
+            tmp[j] = tmp[j] * qpow(j, mod - 2) % mod;
+        }
+        for (int j = 1; j <= k; j++)
+        {
+            dp[i][j] = dp[i][j - 1];
+            for (int t = j; t > j - t; t--)
+            {
+                dp[i][j] = (dp[i][j] + dp[i - 1][t] * tmp[j - t] % mod) % mod;
+            }
+        }
+    }
+    cout << dp[n - 1][k] * qpow(2, n - 1) % mod << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
