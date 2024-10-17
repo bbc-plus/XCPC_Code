@@ -1,0 +1,189 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+template <typename T>
+struct Fenwick
+{
+    int n;
+    vector<T> a;
+    Fenwick(int n_ = 0)
+    {
+        init(n_);
+    }
+    void init(int n_)
+    {
+        n = n_;
+        a.assign(n, T{});
+    }
+    void add(int x, const T &v)
+    {
+        for (int i = x + 1; i <= n; i += i & -i)
+        {
+            a[i - 1] = a[i - 1] + v;
+        }
+    }
+    T sum(int x)
+    {
+        T ans{};
+        for (int i = x; i > 0; i -= i & -i)
+        {
+            ans = ans + a[i - 1];
+        }
+        return ans;
+    }
+    T rangeSum(int l, int r)
+    {
+        return sum(r) - sum(l);
+    }
+};
+
+static constexpr int N = 1e5 + 6;
+int ch[N][26], fail[N], cntNodes;
+int ych[N][26];
+int cnt[N], fa[N];
+int strId = 0;
+int strPos[N];
+vector<int> tree[N], ask[N];
+int in[N], out[N];
+int dfsTime;
+
+struct ACAutomaton
+{
+    ACAutomaton()
+    {
+        cntNodes = 1;
+    }
+    void insert(string s)
+    {
+        int u = 1;
+        for (auto c : s)
+        {
+            if (c >= 'a' && c <= 'z')
+            {
+                int &v = ch[u][c - 'a'];
+                if (!v)
+                {
+                    v = ++cntNodes;
+                    fa[v] = u;
+                }
+                u = v;
+            }
+            else if (c == 'P')
+            {
+                strPos[++strId] = u;
+            }
+            else if (c == 'B')
+            {
+                u = fa[u];
+            }
+        }
+    }
+    void build()
+    {
+        queue<int> q;
+        fail[1] = 1;
+        for (int nxt = 0; nxt < 26; nxt++)
+        {
+            if (ch[1][nxt])
+            {
+                q.push(ch[1][nxt]);
+                fail[ch[1][nxt]] = 1;
+            }
+            else
+            {
+                ch[1][nxt] = 1;
+            }
+        }
+        while (!q.empty())
+        {
+            int u = q.front();
+            q.pop();
+            for (int i = 0; i < 26; i++)
+            {
+                int &v = ch[u][i];
+                if (!v)
+                    v = ch[fail[u]][i];
+                else
+                {
+                    fail[v] = ch[fail[u]][i];
+                    q.push(v);
+                }
+            }
+        }
+    }
+} aca;
+
+void solve()
+{
+    string s;
+    cin >> s;
+    aca.insert(s);
+    memcpy(ych, ch, sizeof(ch));
+    aca.build();
+    for (int i = 2; i <= cntNodes; i++)
+    {
+        tree[fail[i]].push_back(i);
+    }
+    auto dfs = [&](auto self, int u) -> void
+    {
+        in[u] = ++dfsTime;
+        for (auto v : tree[u])
+        {
+            self(self, v);
+        }
+        out[u] = dfsTime;
+    };
+    dfs(dfs, 1);
+    int qnum;
+    cin >> qnum;
+    struct node
+    {
+        int stdNum, characNum;
+    };
+    vector<node> qry(qnum + 1);
+    vector<int> ans(qnum + 1);
+    for (int i = 1; i <= qnum; i++)
+    {
+        cin >> qry[i].characNum >> qry[i].stdNum;
+        ask[strPos[qry[i].stdNum]].push_back(i);
+    }
+    Fenwick<int> fenwick(1e5 + 2);
+    auto tackle = [&](auto self, int u) -> void
+    {
+        fenwick.add(in[u] - 1, 1);
+        for (auto cId : ask[u])
+        {
+            ans[cId] = fenwick.rangeSum(in[strPos[qry[cId].characNum]] - 1, out[strPos[qry[cId].characNum]]);
+        }
+        for (int nxt = 0; nxt < 26; nxt++)
+        {
+            if (ych[u][nxt])
+            {
+                self(self, ych[u][nxt]);
+            }
+        }
+        fenwick.add(in[u] - 1, -1);
+    };
+    tackle(tackle, 1);
+    for (int i = 1; i <= qnum; i++)
+    {
+        cout << ans[i] << '\n';
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
