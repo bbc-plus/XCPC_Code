@@ -4,35 +4,21 @@ using i64 = long long;
 using u64 = unsigned long long;
 
 const int MAXN = 5e5 + 6;
-int ans[MAXN], n, a[MAXN], b[MAXN], w[MAXN], jc[MAXN];
-vector<int> e[MAXN];
-
 const int MOD = 1e9 + 7;
-
-int qpow(int a, int b, int p)
-{
-    int res = 1;
-    while (b)
-    {
-        if (b & 1)
-            res = (1ll * res * a) % p;
-        a = (1ll * a * a) % p;
-        b >>= 1;
-    }
-    return res;
-}
-
-int inv(int x)
-{
-    return qpow(x, MOD - 2, MOD);
-}
+int ans[MAXN], n, a[MAXN], b[MAXN], w[MAXN], jc[MAXN], inv[MAXN];
+vector<int> e[MAXN];
 
 void init()
 {
+    inv[1] = 1;
+    for (int i = 2; i < MAXN; i++)
+    {
+        inv[i] = (i64)MOD - (i64)MOD / i * inv[MOD % i] % MOD;
+    }
     jc[0] = 1;
     for (int i = 1; i < MAXN; i++)
     {
-        jc[i] = 1LL * jc[i - 1] * i % MOD;
+        jc[i] = 1LL * jc[i - 1] * inv[i] % MOD;
     }
 }
 
@@ -81,7 +67,7 @@ void solve()
     for (int i = 1; i <= n; i++)
     {
         if (ans[i] >= 1)
-            ans[i] = (a[i] + 1LL * w[i] * inv(jc[ans[i]])) % MOD;
+            ans[i] = (a[i] + 1LL * w[i] * jc[ans[i]]) % MOD;
         else
             ans[i] = a[i];
         cout << ans[i] << " \n"[i == n];
