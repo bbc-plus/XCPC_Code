@@ -1,0 +1,77 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> dp(m + 1, vector<int>(2));
+    vector<int> p(n + 1);
+    vector<vector<int>> w(n + 1, vector<int>(16));
+    int sum = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> p[i];
+        sum += p[i];
+        for (int j = 1; j <= p[i]; j++)
+        {
+            cin >> w[i][j];
+        }
+    }
+    if (sum <= m)
+    {
+        int ans = 0;
+        for (int i = 1; i <= n; i++)
+        {
+            ans += w[i][p[i]];
+        }
+        cout << ans << '\n';
+    }
+    else
+    {
+        for (int j = 0; j <= m; j++)
+        {
+            for (int k = 0; k < 2; k++)
+            {
+                dp[j][k] = -1e9;
+            }
+        }
+        dp[0][0] = 0;
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = m; j >= 1; j--)
+            {
+                if (j >= p[i])
+                {
+                    dp[j][0] = max(dp[j][0], dp[j - p[i]][0] + w[i][p[i]]);
+                    dp[j][1] = max(dp[j][1], dp[j - p[i]][1] + w[i][p[i]]);
+                }
+                for (int k = 1; k < p[i]; k++)
+                {
+                    if (k <= j)
+                    {
+                        dp[j][1] = max(dp[j][1], dp[j - k][0] + w[i][k]);
+                    }
+                }
+            }
+        }
+        cout << max(dp[m][0], dp[m][1]) << '\n';
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
