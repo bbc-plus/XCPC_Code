@@ -1,0 +1,106 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+const int MAXN = 5e5 + 6;
+int ans[MAXN], n, a[MAXN], b[MAXN], w[MAXN], jc[MAXN];
+vector<int> e[MAXN];
+
+const int MOD = 1e9 + 7;
+
+int qpow(int a, int b, int p)
+{
+    int res = 1;
+    while (b)
+    {
+        if (b & 1)
+            res = (1ll * res * a) % p;
+        a = (1ll * a * a) % p;
+        b >>= 1;
+    }
+    return res;
+}
+
+int inv(int x)
+{
+    return qpow(x, MOD - 2, MOD);
+}
+
+void init()
+{
+    jc[0] = 1;
+    for (int i = 1; i < MAXN; i++)
+    {
+        jc[i] = 1LL * jc[i - 1] * i % MOD;
+    }
+}
+
+void solve()
+{
+    cin >> n;
+    for (int i = 1; i <= n; i++)
+    {
+        ans[i] = 0;
+        e[i].clear();
+    }
+    for (int i = 1; i <= n; i++)
+        cin >> a[i];
+    for (int i = 1; i <= n; i++)
+        cin >> b[i];
+    for (int i = 1; i <= n; i++)
+        cin >> w[i];
+    for (int i = 1; i <= n; i++)
+    {
+        if (b[i] != i && a[i] >= a[b[i]] && a[i] < a[b[i]] + w[b[i]])
+        {
+            e[b[i]].push_back(i);
+        }
+        else if (b[i] == i || a[i] >= a[b[i]] + w[b[i]])
+        {
+            ans[i] = 0;
+        }
+        else
+        {
+            ans[i] = 1;
+        }
+    }
+    auto dfs = [&](auto self, int u) -> void
+    {
+        for (auto v : e[u])
+        {
+            ans[v] = ans[u] + 1;
+            self(self, v);
+        }
+    };
+    for (int i = 1; i <= n; i++)
+    {
+        if (ans[i] == 1)
+            dfs(dfs, i);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        if (ans[i] >= 1)
+            ans[i] = (a[i] + 1LL * w[i] * inv(jc[ans[i]])) % MOD;
+        else
+            ans[i] = a[i];
+        cout << ans[i] << " \n"[i == n];
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    init();
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
