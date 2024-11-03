@@ -1,0 +1,173 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct MinCostFlow
+{
+    using PLI = pair<i64, int>;
+    const i64 INF = numeric_limits<i64>::max();
+    struct Edge
+    {
+        int v, c, f;
+        Edge(int v, int c, int f) : v(v), c(c), f(f) {}
+    };
+    const int n;
+    vector<Edge> e;
+    vector<vector<int>> g;
+    vector<i64> h, dis;
+    vector<int> pre;
+    MinCostFlow(int n) : n(n + 1), g(n + 1) {}
+    void add(int u, int v, int c, int f) // c 流量, f 费用
+    {
+        g[u].push_back(e.size());
+        e.emplace_back(v, c, f);
+        g[v].push_back(e.size());
+        e.emplace_back(u, 0, -f);
+    }
+    bool dijkstra(int s, int t)
+    {
+        dis.assign(n, INF);
+        pre.assign(n, -1);
+        priority_queue<PLI, vector<PLI>, greater<PLI>> que;
+        dis[s] = 0;
+        que.emplace(0, s);
+        while (!que.empty())
+        {
+            auto [d, u] = que.top();
+            que.pop();
+            if (dis[u] < d)
+                continue;
+            for (int i : g[u])
+            {
+                auto [v, c, f] = e[i];
+                if (c > 0 && dis[v] > d + h[u] - h[v] + f)
+                {
+                    dis[v] = d + h[u] - h[v] + f;
+                    pre[v] = i;
+                    que.emplace(dis[v], v);
+                }
+            }
+        }
+        return dis[t] != INF;
+    }
+    pair<int, i64> flow(int s, int t)
+    {
+        int flow = 0;
+        i64 cost = 0;
+        h.assign(n, 0);
+        while (dijkstra(s, t))
+        {
+            for (int i = 0; i < n; ++i)
+                h[i] += dis[i];
+            int aug = numeric_limits<int>::max();
+            for (int i = t; i != s; i = e[pre[i] ^ 1].v)
+                aug = min(aug,
+                          e[pre[i]].c);
+            for (int i = t; i != s; i = e[pre[i] ^ 1].v)
+            {
+                e[pre[i]].c -= aug;
+                e[pre[i] ^ 1].c += aug;
+            }
+            flow += aug;
+            cost += i64(aug) * h[t];
+        }
+        return {flow, cost};
+    }
+};
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n);
+    set<int> fac;
+    vector<vector<int>> e(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i];
+        for (int j = 1; j * j <= a[i]; j++)
+        {
+            if (a[i] % j == 0)
+            {
+                if (j * j == a[i])
+                {
+                    fac.insert(j);
+                    e[i].push_back(j);
+                }
+                else
+                {
+                    fac.insert(j);
+                    fac.insert(a[i] / j);
+                    e[i].push_back(j);
+                    e[i].push_back(a[i] / j);
+                }
+            }
+        }
+    }
+    vector<int> f1(n), f2(fac.size());
+
+    auto getf = [&](int x) -> int
+    {
+        int res = 0;
+        for (int i = 2; i * i <= x; i++)
+        {
+            while (x % i == 0)
+            {
+                x /= i;
+                res++;
+            }
+            if (x == 1)
+                break;
+        }
+        if (x != 1)
+            res++;
+        return res;
+    };
+    for (int i = 0; i < n; i++)
+    {
+        f1[i] = getf(a[i]);
+    }
+    map<int, int> id;
+    int idx = 0;
+    for (auto x : fac)
+    {
+        id[x] = idx;
+        f2[idx++] = getf(x);
+    }
+
+    MinCostFlow flow(n + fac.size() + 2);
+    int s = 1, t = 2;
+    for (int i = 0; i < n; i++)
+    {
+        flow.add(s, i + 3, 1, 0);
+    }
+    for (int i = 0; i < idx; i++)
+    {
+        flow.add(i + 3 + n, t, 1, 0);
+    }
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < e[i].size(); j++)
+        {
+            int to = id[e[i][j]];
+            flow.add(i + 3, to + 3 + n, 1, -(f1[i] - f2[to]));
+        }
+    }
+    cout << -flow.flow(s, t).second << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
