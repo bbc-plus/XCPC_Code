@@ -1,0 +1,127 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m, k;
+    cin >> n >> m >> k;
+    vector<int> a(k);
+    vector<int> isK(n, 0);
+    for (int i = 0; i < k; i++)
+    {
+        cin >> a[i];
+        isK[a[i] - 1] = 1;
+    }
+    if (k == n)
+    {
+        cout << "No\n";
+        return;
+    }
+    vector e(n, vector<int>());
+    while (m--)
+    {
+        int p, q;
+        cin >> p >> q;
+        p--;
+        q--;
+        e[p].push_back(q);
+        e[q].push_back(p);
+    }
+    int cnt = 0;
+    vector<int> vis(n, 0);
+    auto dfs = [&](auto self, int u) -> void
+    {
+        cnt++;
+        vis[u] = 1;
+        for (auto v : e[u])
+        {
+            if (isK[v] == 0 && vis[v] == 0)
+            {
+                self(self, v);
+            }
+        }
+    };
+    int st;
+    for (int i = 0; i < n; i++)
+    {
+        if (isK[i] == 0)
+        {
+            st = i;
+            dfs(dfs, i);
+            break;
+        }
+    }
+    if (cnt != n - k)
+    {
+        cout << "No\n";
+        return;
+    }
+
+    cnt = 0;
+    for (int i = 0; i < n; i++)
+    {
+        vis[i] = 0;
+    }
+    vector<vector<int>> ans;
+    vector<int> dfn(n);
+    int idx = 0;
+    auto dfs2 = [&](auto self, int u) -> void
+    {
+        vector<int> tmp;
+        tmp.push_back(u);
+        cnt++;
+        ++idx;
+        dfn[u] = idx;
+        vis[u] = 1;
+        if (isK[u] == 1)
+            return;
+        for (auto v : e[u])
+        {
+            if (vis[v] == 0)
+            {
+                self(self, v);
+                tmp.push_back(v);
+            }
+        }
+        if (tmp.size() > 1)
+        {
+            ans.push_back(tmp);
+        }
+    };
+    dfs2(dfs2, st);
+    if (cnt != n)
+    {
+        cout << "No\n";
+        return;
+    }
+
+    cout << "Yes\n";
+    sort(ans.begin(), ans.end(), [&](vector<int> a, vector<int> b)
+         { return dfn[a[0]] < dfn[b[0]]; });
+    cout << ans.size() << '\n';
+    for (int i = 0; i < ans.size(); i++)
+    {
+        cout << ans[i][0] + 1 << ' ' << ans[i].size() - 1 << ' ';
+        for (int j = 1; j < ans[i].size(); j++)
+        {
+            cout << ans[i][j] + 1 << " \n"[j == ans[i].size() - 1];
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
