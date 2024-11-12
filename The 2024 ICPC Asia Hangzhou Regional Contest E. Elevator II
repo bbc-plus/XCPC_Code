@@ -1,0 +1,92 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    struct node
+    {
+        int l, r, id;
+    };
+    auto cmp = [](node a, node b) -> bool
+    {
+        if (a.l == b.l)
+            return a.r < b.r;
+        else
+            return a.l < b.l;
+    };
+
+    i64 sum = 0;
+    int n, f;
+    cin >> n >> f;
+    vector<node> ele(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> ele[i].l >> ele[i].r;
+        ele[i].id = i;
+        sum += ele[i].r - ele[i].l;
+    }
+    sort(ele.begin() + 1, ele.end(), cmp);
+
+    vector<int> ans, vis(n + 1, 0);
+    int maxn = f, idx = -1;
+    for (int i = 1; i <= n; i++)
+    {
+        if (ele[i].l <= f)
+        {
+            if (ele[i].r > maxn)
+            {
+                maxn = ele[i].r;
+                idx = ele[i].id;
+            }
+        }
+        else
+        {
+            if (idx == -1)
+            {
+                sum += ele[i].l - f;
+                f = maxn = ele[i].r;
+                ans.push_back(ele[i].id);
+                vis[ele[i].id] = 1;
+            }
+            else
+            {
+                f = maxn;
+                ans.push_back(idx);
+                vis[idx] = 1;
+                idx = -1;
+                i--;
+            }
+        }
+    }
+
+    for (int i = n; i >= 1; i--)
+    {
+        if (vis[ele[i].id] == 0)
+        {
+            ans.push_back(ele[i].id);
+        }
+    }
+
+    cout << sum << '\n';
+    for (int i = 0; i < n; i++)
+    {
+        cout << ans[i] << " \n"[i == n - 1];
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
