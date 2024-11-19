@@ -1,0 +1,71 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, tar;
+    cin >> n >> tar;
+    vector<vector<int>> e(n + 1);
+
+    for (int i = 0; i < n; i++)
+    {
+        int to;
+        cin >> to;
+        to += i;
+        to %= n;
+        if (to == 0)
+            to += n;
+        e[i].push_back(to);
+    }
+    for (int i = 1; i < n; i++)
+    {
+        e[i].push_back(i + 1);
+    }
+    e[n].push_back(1);
+
+    vector<bool> vis(n + 1, 0);
+    int ans = 0;
+    queue<int> q;
+    q.push(0);
+    while (!q.empty())
+    {
+        int _siz = q.size();
+        ans++;
+        while (_siz--)
+        {
+            int cur = q.front();
+            q.pop();
+            for (auto to : e[cur])
+            {
+                if (vis[to] == 1)
+                {
+                    continue;
+                }
+                if (to == tar)
+                {
+                    cout << ans << '\n';
+                    return;
+                }
+                vis[to] = 1;
+                q.push(to);
+            }
+        }
+    }
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
