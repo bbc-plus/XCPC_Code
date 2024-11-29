@@ -1,0 +1,108 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, k;
+    cin >> n >> k;
+
+    vector g(n + 1, vector<int>(n + 1));
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            char c;
+            cin >> c;
+            g[i][j] = (c == 'B');
+        }
+    }
+
+    vector<int> oklie(n + 2, 0), okhang(n + 2, 0);
+    for (int i = 1; i <= n; i++)
+    {
+        bool ok = 1;
+        for (int j = 1; j <= n; j++)
+        {
+            if (g[i][j] == 1)
+            {
+                ok = 0;
+                break;
+            }
+        }
+        okhang[i] = okhang[i - 1] + (ok == 1);
+    }
+    for (int j = 1; j <= n; j++)
+    {
+        bool ok = 1;
+        for (int i = 1; i <= n; i++)
+        {
+            if (g[i][j] == 1)
+            {
+                ok = 0;
+                break;
+            }
+        }
+        oklie[j] = oklie[j - 1] + (ok == 1);
+    }
+
+    vector prelie(n + 2, vector<int>(n + 2, 0)), prehang(n + 2, vector<int>(n + 2, 0));
+    vector addlie(n + 2, vector<int>(n + 2, 0)), addhang(n + 2, vector<int>(n + 2, 0));
+    for (int j = 1; j <= n; j++)
+    {
+        for (int i = 1; i <= n; i++)
+        {
+            prelie[j][i] = prelie[j][i - 1] + (g[i][j] == 1);
+        }
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            prehang[i][j] = prehang[i][j - 1] + (g[i][j] == 1);
+        }
+    }
+    for (int i = 1; i <= n - k + 1; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            int tmp = prelie[j][i - 1] - prelie[j][0] + prelie[j][n] - prelie[j][i + k - 1];
+            addlie[i][j] = addlie[i][j - 1] + (tmp == 0);
+        }
+    }
+    for (int j = 1; j <= n - k + 1; j++)
+    {
+        for (int i = 1; i <= n; i++)
+        {
+            int tmp = prehang[i][j - 1] - prehang[i][0] + prehang[i][n] - prehang[i][j + k - 1];
+            addhang[j][i] = addhang[j][i - 1] + (tmp == 0);
+        }
+    }
+
+    int ans = 0;
+    for (int i = 1; i <= n - k + 1; i++)
+    {
+        for (int j = 1; j <= n - k + 1; j++)
+        {
+            ans = max(ans, addlie[i][j + k - 1] - addlie[i][j - 1] + addhang[j][i + k - 1] - addhang[j][i - 1] + oklie[j - 1] - oklie[0] + oklie[n] - oklie[j + k - 1] + okhang[i - 1] - okhang[0] + okhang[n] - okhang[i + k - 1]);
+        }
+    }
+
+    cout << ans << '\n';
+}
+
+int main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
