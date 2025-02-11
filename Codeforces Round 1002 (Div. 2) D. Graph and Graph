@@ -1,0 +1,101 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, s1, s2;
+    cin >> n >> s1 >> s2;
+    int m1;
+    cin >> m1;
+    vector<vector<int>> e1(n + 1);
+    vector can(n + 1, vector<int>(n + 1, 0));
+    set<int> st;
+    for (int i = 1; i <= m1; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e1[u].push_back(v);
+        e1[v].push_back(u);
+        can[min(u, v)][max(u, v)] = 1;
+    }
+    int m2;
+    cin >> m2;
+    vector<vector<int>> e2(n + 1);
+    for (int i = 1; i <= m2; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e2[u].push_back(v);
+        e2[v].push_back(u);
+        if (can[min(u, v)][max(u, v)] == 1)
+        {
+            st.insert(u);
+            st.insert(v);
+        }
+    }
+    vector mindis(n + 1, vector<int>(n + 1, 1e9)), vis(n + 1, vector<int>(n + 1, 0));
+    mindis[s1][s2] = 0;
+    struct node
+    {
+        int a, b, dis;
+        bool operator>(const node &n2) const
+        {
+            return dis > n2.dis;
+        }
+    };
+    priority_queue<node, vector<node>, greater<node>> pq;
+    pq.push({s1, s2, 0});
+    while (!pq.empty())
+    {
+        auto tmp = pq.top();
+        pq.pop();
+        if (vis[tmp.a][tmp.b] == 1)
+        {
+            continue;
+        }
+        vis[tmp.a][tmp.b] = 1;
+        for (auto x1 : e1[tmp.a])
+        {
+            for (auto x2 : e2[tmp.b])
+            {
+                int ndis = tmp.dis + abs(x1 - x2);
+                if (ndis < mindis[x1][x2])
+                {
+                    mindis[x1][x2] = ndis;
+                    pq.push({x1, x2, ndis});
+                }
+            }
+        }
+    }
+    int ans = 1e9;
+    for (auto x : st)
+    {
+        ans = min(ans, mindis[x][x]);
+    }
+    if (ans == 1e9)
+    {
+        cout << -1 << '\n';
+    }
+    else
+    {
+        cout << ans << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
