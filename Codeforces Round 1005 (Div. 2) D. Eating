@@ -1,0 +1,106 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, q;
+    cin >> n >> q;
+    vector<int> w(n + 1), suf(n + 2, 0);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> w[i];
+    }
+
+    vector<vector<int>> cnt(n + 2, vector<int>(30, 0));
+    for (int i = n; i >= 1; i--)
+    {
+        suf[i] = w[i] ^ suf[i + 1];
+        for (int k = 0; k < 30; k++)
+        {
+            if ((w[i] >> k) & 1)
+            {
+                cnt[i][k]++;
+            }
+            cnt[i][k] += cnt[i + 1][k];
+        }
+    }
+
+    while (q--)
+    {
+        int x;
+        cin >> x;
+        int l = n + 1;
+        while (1)
+        {
+            int top;
+            for (int k = 29; k >= 0; k--)
+            {
+                if ((x >> k) & 1)
+                {
+                    top = k;
+                    break;
+                }
+            }
+
+            int maxn = 1;
+            for (int i = 29; i >= top; i--)
+            {
+                auto check = [&](int mid) -> bool
+                {
+                    if (cnt[mid][i] - cnt[l][i] == 0)
+                    {
+                        return 1;
+                    }
+                    return 0;
+                };
+                int down = 1, up = l;
+                while (down < up)
+                {
+                    int mid = (down + up) >> 1;
+                    if (check(mid))
+                    {
+                        up = mid;
+                    }
+                    else
+                    {
+                        down = mid + 1;
+                    }
+                }
+                maxn = max(maxn, up);
+            }
+
+            x ^= (suf[maxn] ^ suf[l]);
+            l = maxn;
+            if (l == 1 || w[l - 1] > x)
+            {
+                break;
+            }
+            
+            x ^= w[l - 1];
+            l--;
+            if (l == 1 || w[l - 1] > x)
+            {
+                break;
+            }
+        }
+        cout << n + 1 - l << " \n"[q == 0];
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
