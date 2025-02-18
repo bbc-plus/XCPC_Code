@@ -1,0 +1,200 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+struct SCC
+{
+    int n, now, cnt;
+    vector<vector<int>> ver;
+    vector<int> dfn, low, col, S;
+    SCC(int n) : n(n), ver(n + 1), low(n + 1)
+    {
+        dfn.resize(n + 1, -1);
+        col.resize(n + 1, -1);
+        now = cnt = 0;
+    }
+    void add(int x, int y)
+    {
+        ver[x].push_back(y);
+    }
+    void tarjan(int x)
+    {
+        dfn[x] = low[x] = ++now;
+        S.push_back(x);
+        for (auto y : ver[x])
+        {
+            if (dfn[y] == -1)
+            {
+                tarjan(y);
+                low[x] = min(low[x], low[y]);
+            }
+            else if (col[y] == -1)
+            {
+                low[x] = min(low[x], dfn[y]);
+            }
+        }
+        if (dfn[x] == low[x])
+        {
+            int pre;
+            cnt++;
+            do
+            {
+                pre = S.back();
+                col[pre] = cnt;
+                S.pop_back();
+            } while (pre != x);
+        }
+    }
+    void work()
+    {
+        for (int i = 1; i <= n; i++)
+        {
+            if (dfn[i] == -1)
+            {
+                tarjan(i);
+            }
+        }
+    }
+};
+
+void solve()
+{
+    int n, k, q;
+    cin >> n >> k >> q;
+    SCC scc(n);
+    vector<vector<int>> rk(k + 1, vector<int>(n + 1)), pre(k + 1, vector<int>(n + 1, 0));
+    for (int i = 1; i <= k; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            cin >> rk[i][j];
+            if (j > 1)
+            {
+                scc.add(rk[i][j - 1], rk[i][j]);
+            }
+        }
+    }
+    scc.work();
+    for (int i = 1; i <= k; i++)
+    {
+        for (int j = 1; j <= n; j++)
+        {
+            rk[i][j] = scc.col[rk[i][j]];
+        }
+    }
+
+    for (int i = 1; i <= k; i++)
+    {
+        int last = 0;
+        int sum = 0;
+        for (int j = 1; j <= n; j++)
+        {
+            if (j == n || (rk[i][j] != rk[i][j + 1]))
+            {
+                int num = j - last;
+                if (num > 1)
+                {
+                    sum += (num - 1) * num / 2;
+                }
+                pre[i][j] = sum;
+                last = j;
+            }
+        }
+    }
+
+    int ans = 0;
+    while (q--)
+    {
+        int id, l, r;
+        cin >> id >> l >> r;
+        id = (id + ans) % k + 1;
+        l = (l + ans) % n + 1;
+        r = (r + ans) % n + 1;
+        if (rk[id][l] == rk[id][r])
+        {
+            int num = r - l + 1;
+            if (num > 1)
+            {
+                ans = (num - 1) * num / 2;
+            }
+            else
+            {
+                ans = 0;
+            }
+        }
+        else
+        {
+            auto search = [&](int down, int up, int x, int type) -> int
+            {
+                auto check = [&](int mid) -> bool
+                {
+                    if (rk[id][x] == rk[id][mid])
+                    {
+                        return 1;
+                    }
+                    return 0;
+                };
+                while (down < up)
+                {
+                    if (type == 1)
+                    {
+                        int mid = (down + up + 1) >> 1;
+                        if (check(mid))
+                        {
+                            down = mid;
+                        }
+                        else
+                        {
+                            up = mid - 1;
+                        }
+                    }
+                    else
+                    {
+                        int mid = (down + up) >> 1;
+                        if (check(mid))
+                        {
+                            up = mid;
+                        }
+                        else
+                        {
+                            down = mid + 1;
+                        }
+                    }
+                }
+                return down;
+            };
+            int pos1 = search(l, r, l, 1);
+            int pos2 = search(l, r, r, 2) - 1;
+            int num1 = pos1 - l + 1;
+            int num2 = r - pos2;
+            int val1 = 0, val2 = 0;
+            if (num1 > 1)
+            {
+                val1 = (num1 - 1) * num1 / 2;
+            }
+            if (num2 > 1)
+            {
+                val2 = (num2 - 1) * num2 / 2;
+            }
+            ans = pre[id][pos2] - pre[id][pos1] + val1 + val2;
+        }
+        cout << ans << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
