@@ -1,0 +1,132 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, K;
+    cin >> n >> K;
+    const int mod = 998244353;
+    vector<int> ty(5);
+    for (int i = 1; i <= 4; i++)
+    {
+        cin >> ty[i];
+    }
+    struct Matrix
+    {
+        int m[6][6];
+        Matrix()
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    m[i][j] = 0;
+                }
+            }
+        }
+    };
+    auto mul = [&](Matrix a, Matrix b) -> Matrix
+    {
+        Matrix res;
+        for (int i = 0; i < 6; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                for (int k = 0; k < 6; k++)
+                {
+                    res.m[i][j] += a.m[i][k] * b.m[k][j];
+                    res.m[i][j] %= mod;
+                }
+            }
+        }
+        return res;
+    };
+    auto qpow = [&](Matrix a, int b) -> Matrix
+    {
+        Matrix res;
+        for (int i = 0; i < 6; i++)
+        {
+            res.m[i][i] = 1;
+        }
+        while (b)
+        {
+            if (b & 1)
+            {
+                res = mul(res, a);
+            }
+            a = mul(a, a);
+            b >>= 1;
+        }
+        return res;
+    };
+    Matrix ans;
+    ans.m[0][K] = 1;
+    Matrix mt1, mt2, mt3;
+    mt1.m[0][1] = mt1.m[1][2] = mt1.m[2][3] = mt1.m[3][4] = mt1.m[4][5] = mt1.m[5][5] = 1;
+    mt2.m[0][1] = mt2.m[1][0] = mt2.m[2][1] = mt2.m[3][2] = mt2.m[4][3] = mt2.m[5][4] = 1;
+    mt3.m[0][1] = mt3.m[1][2] = mt3.m[2][3] = mt3.m[3][4] = mt3.m[4][5] = mt3.m[5][5] = 1;
+    mt3.m[0][1] = mt3.m[1][0] = mt3.m[2][1] = mt3.m[3][2] = mt3.m[4][3] = mt3.m[5][4] = 1;
+    int last = n % 4;
+    n = n / 4;
+    Matrix tmp;
+    for (int i = 0; i < 6; i++)
+    {
+        tmp.m[i][i] = 1;
+    }
+    for (int i = 1; i <= 4; i++)
+    {
+        if (ty[i] == 1)
+        {
+            tmp = mul(tmp, mt1);
+        }
+        else if (ty[i] == 2)
+        {
+            tmp = mul(tmp, mt2);
+        }
+        else
+        {
+            tmp = mul(tmp, mt3);
+        }
+    }
+    ans = mul(ans, qpow(tmp, n));
+    for (int i = 1; i <= last; i++)
+    {
+        if (ty[i] == 1)
+        {
+            ans = mul(ans, mt1);
+        }
+        else if (ty[i] == 2)
+        {
+            ans = mul(ans, mt2);
+        }
+        else
+        {
+            ans = mul(ans, mt3);
+        }
+    }
+    int fans = 0;
+    for (int i = 0; i <= 5; i++)
+    {
+        fans += ans.m[0][i];
+        fans %= mod;
+    }
+    cout << fans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
