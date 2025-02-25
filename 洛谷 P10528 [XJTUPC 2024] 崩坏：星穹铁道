@@ -1,0 +1,119 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, k;
+    cin >> n >> k;
+    vector<int> a(5);
+    for (int i = 1; i <= 4; i++)
+    {
+        cin >> a[i];
+    }
+    const int mod = 998244353;
+    int ans = 0;
+    vector g(6, vector<vector<int>>(6, vector<int>(66, 0)));
+    vector<int> cur(6, 0), tmp(6, 0);
+    auto dfs = [&](auto self, int pos, int limit, int from, int to, int type) -> void
+    {
+        if (pos > limit)
+        {
+            if (type == 1)
+            {
+                g[from][to][0]++;
+            }
+            else
+            {
+                ans += cur[from];
+                ans %= mod;
+            }
+            return;
+        }
+        if (a[pos] == 1)
+        {
+            self(self, pos + 1, limit, from, min(to + 1, 5LL), type);
+        }
+        else if (a[pos] == 2)
+        {
+            if (to > 0)
+            {
+                self(self, pos + 1, limit, from, to - 1, type);
+            }
+            else
+            {
+                self(self, pos + 1, limit, from, min(to + 1, 5LL), type);
+            }
+        }
+        else
+        {
+            if (to > 0)
+            {
+                self(self, pos + 1, limit, from, to - 1, type);
+            }
+            self(self, pos + 1, limit, from, min(to + 1, 5LL), type);
+        }
+    };
+    for (int i = 0; i <= 5; i++)
+    {
+        dfs(dfs, 1, 4, i, i, 1);
+    }
+    for (int m = 1; m <= 60; m++)
+    {
+        for (int i = 0; i <= 5; i++)
+        {
+            for (int j = 0; j <= 5; j++)
+            {
+                for (int s = 0; s <= 5; s++)
+                {
+                    g[i][j][m] += g[i][s][m - 1] * g[s][j][m - 1];
+                    g[i][j][m] %= mod;
+                }
+            }
+        }
+    }
+    cur[k] = 1;
+    int remain = n % 4;
+    n = n / 4;
+    for (int m = 0; m <= 60; m++)
+    {
+        if ((n >> m) & 1)
+        {
+            for (int i = 0; i <= 5; i++)
+            {
+                for (int j = 0; j <= 5; j++)
+                {
+                    tmp[j] += cur[i] * g[i][j][m];
+                    tmp[j] %= mod;
+                }
+            }
+            for (int i = 0; i <= 5; i++)
+            {
+                cur[i] = tmp[i];
+                tmp[i] = 0;
+            }
+        }
+    }
+    for (int i = 0; i <= 5; i++)
+    {
+        dfs(dfs, 1, remain, i, i, 2);
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
