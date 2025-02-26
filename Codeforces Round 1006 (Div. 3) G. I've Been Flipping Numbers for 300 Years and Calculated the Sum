@@ -1,0 +1,219 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+using u64 = unsigned long long;
+
+template <class T>
+constexpr T power(T a, i64 b)
+{
+    T res{1};
+    for (; b; b /= 2, a *= a)
+    {
+        if (b % 2)
+        {
+            res *= a;
+        }
+    }
+    return res;
+}
+
+constexpr i64 mul(i64 a, i64 b, i64 p)
+{
+    i64 res = (__int128)a * b % p;
+    return res;
+}
+
+template <i64 P>
+struct MInt
+{
+    i64 x;
+    constexpr MInt() : x{0} {}
+    constexpr MInt(i64 x) : x{norm(x % getMod())} {}
+
+    static i64 Mod;
+    constexpr static i64 getMod()
+    {
+        if (P > 0)
+        {
+            return P;
+        }
+        else
+        {
+            return Mod;
+        }
+    }
+    constexpr static void setMod(i64 Mod_)
+    {
+        Mod = Mod_;
+    }
+    constexpr i64 norm(i64 x) const
+    {
+        if (x < 0)
+        {
+            x += getMod();
+        }
+        if (x >= getMod())
+        {
+            x -= getMod();
+        }
+        return x;
+    }
+    constexpr i64 val() const
+    {
+        return x;
+    }
+    constexpr MInt operator-() const
+    {
+        MInt res;
+        res.x = norm(getMod() - x);
+        return res;
+    }
+    constexpr MInt inv() const
+    {
+        return power(*this, getMod() - 2);
+    }
+    constexpr MInt &operator*=(MInt rhs) &
+    {
+        if (getMod() < (1ULL << 31))
+        {
+            x = x * rhs.x % int(getMod());
+        }
+        else
+        {
+            x = mul(x, rhs.x, getMod());
+        }
+        return *this;
+    }
+    constexpr MInt &operator+=(MInt rhs) &
+    {
+        x = norm(x + rhs.x);
+        return *this;
+    }
+    constexpr MInt &operator-=(MInt rhs) &
+    {
+        x = norm(x - rhs.x);
+        return *this;
+    }
+    constexpr MInt &operator/=(MInt rhs) &
+    {
+        return *this *= rhs.inv();
+    }
+    friend constexpr MInt operator*(MInt lhs, MInt rhs)
+    {
+        MInt res = lhs;
+        res *= rhs;
+        return res;
+    }
+    friend constexpr MInt operator+(MInt lhs, MInt rhs)
+    {
+        MInt res = lhs;
+        res += rhs;
+        return res;
+    }
+    friend constexpr MInt operator-(MInt lhs, MInt rhs)
+    {
+        MInt res = lhs;
+        res -= rhs;
+        return res;
+    }
+    friend constexpr MInt operator/(MInt lhs, MInt rhs)
+    {
+        MInt res = lhs;
+        res /= rhs;
+        return res;
+    }
+    friend constexpr istream &operator>>(istream &is, MInt &a)
+    {
+        i64 v;
+        is >> v;
+        a = MInt(v);
+        return is;
+    }
+    friend constexpr ostream &operator<<(ostream &os, const MInt &a)
+    {
+        return os << a.val();
+    }
+    friend constexpr bool operator==(MInt lhs, MInt rhs)
+    {
+        return lhs.val() == rhs.val();
+    }
+    friend constexpr bool operator!=(MInt lhs, MInt rhs)
+    {
+        return lhs.val() != rhs.val();
+    }
+    friend constexpr bool operator<(MInt lhs, MInt rhs)
+    {
+        return lhs.val() < rhs.val();
+    }
+};
+
+constexpr int P = 1e9 + 7;
+using Z = MInt<P>;
+
+i64 s1(int n)
+{
+    return 1LL * n * (n + 1) / 2;
+}
+i64 s2(int n)
+{
+    return 1LL * n * (n + 1) * (2 * n + 1) / 6;
+}
+
+void solve()
+{
+    int n;
+    i64 k;
+    cin >> n >> k;
+    Z ans = 0;
+    if (k > n)
+    {
+        ans += Z(k - n) * n;
+        k = n;
+    }
+    vector<int> a;
+    for (int l = 2, r; l <= k; l = r + 1)
+    {
+        if (1LL * l * l <= n)
+        {
+            int tmp = n;
+            while (tmp)
+            {
+                a.push_back(tmp % l);
+                tmp /= l;
+            }
+            Z num = 0;
+            for (auto x : a)
+            {
+                num *= l;
+                num += x;
+            }
+            ans += num;
+            a.clear();
+            r = l;
+        }
+        else
+        {
+            int v = n / l;
+            r = min(1LL * n / v, k);
+            ans += Z(n) * (s1(r) - s1(l - 1));
+            ans -= Z(v) * (s2(r) - s2(l - 1));
+            ans += Z(v) * (r - l + 1);
+        }
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
