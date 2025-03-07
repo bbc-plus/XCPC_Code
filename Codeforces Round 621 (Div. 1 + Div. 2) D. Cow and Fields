@@ -1,0 +1,85 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m, k;
+    cin >> n >> m >> k;
+    vector<int> a(k + 1);
+    for (int i = 1; i <= k; i++)
+    {
+        cin >> a[i];
+    }
+    vector<vector<int>> e(n + 1, vector<int>());
+    while (m--)
+    {
+        int u, v;
+        cin >> u >> v;
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+    auto bfs = [&](int st) -> vector<int>
+    {
+        vector<int> dis(n + 1), vis(n + 1, 0);
+        dis[st] = 0;
+        vis[st] = 1;
+        queue<int> q;
+        q.push(st);
+        while (!q.empty())
+        {
+            int _siz = q.size();
+            while (_siz--)
+            {
+                int u = q.front();
+                q.pop();
+                for (auto v : e[u])
+                {
+                    if (vis[v] == 1)
+                    {
+                        continue;
+                    }
+                    dis[v] = dis[u] + 1;
+                    vis[v] = 1;
+                    q.push(v);
+                }
+            }
+        }
+        return dis;
+    };
+    vector<int> dis1 = bfs(1);
+    vector<int> dis2 = bfs(n);
+    vector<pair<int, int>> v;
+    for (int i = 1; i <= k; i++)
+    {
+        v.push_back({dis1[a[i]], dis2[a[i]]});
+    }
+    sort(v.begin(), v.end(), [&](pair<int, int> a, pair<int, int> b)
+         { return a.first - b.first < a.second - b.second; });
+    int maxn = 0;
+    int max_num = 0;
+    for (int i = k - 2; i >= 0; i--)
+    {
+        max_num = max(max_num, v[i + 1].second);
+        maxn = max(maxn, max_num + v[i].first);
+    }
+    maxn = min(maxn + 1, dis1[n]);
+    cout << maxn << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
