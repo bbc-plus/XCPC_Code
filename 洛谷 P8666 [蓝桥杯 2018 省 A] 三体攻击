@@ -1,0 +1,105 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int A, B, C, m;
+    cin >> A >> B >> C >> m;
+    vector<vector<vector<int>>> a(A + 2, vector<vector<int>>(B + 2, vector<int>(C + 2, 0)));
+    auto p = a, t = a;
+    for (int i = 1; i <= A; i++)
+    {
+        for (int j = 1; j <= B; j++)
+        {
+            for (int k = 1; k <= C; k++)
+            {
+                cin >> a[i][j][k];
+            }
+        }
+    }
+    vector<int> la(m + 1), ra(m + 1), lb(m + 1), rb(m + 1), lc(m + 1), rc(m + 1), h(m + 1);
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> la[i] >> ra[i] >> lb[i] >> rb[i] >> lc[i] >> rc[i] >> h[i];
+        la[i] = max(la[i], 1LL);
+        lb[i] = max(lb[i], 1LL);
+        lc[i] = max(lc[i], 1LL);
+        ra[i] = min(ra[i], A);
+        rb[i] = min(rb[i], B);
+        rc[i] = min(rc[i], C);
+    }
+
+    auto check = [&](int mid) -> bool
+    {
+        p = t;
+        for (int i = 1; i <= mid; i++)
+        {
+            if (la[i] > ra[i] || lb[i] > rb[i] || lc[i] > rc[i])
+            {
+                continue;
+            }
+            p[la[i]][lb[i]][lc[i]] += h[i];
+            p[la[i]][lb[i]][rc[i] + 1] -= h[i];
+            p[la[i]][rb[i] + 1][lc[i]] -= h[i];
+            p[ra[i] + 1][lb[i]][lc[i]] -= h[i];
+            p[la[i]][rb[i] + 1][rc[i] + 1] += h[i];
+            p[ra[i] + 1][lb[i]][rc[i] + 1] += h[i];
+            p[ra[i] + 1][rb[i] + 1][lc[i]] += h[i];
+            p[ra[i] + 1][rb[i] + 1][rc[i] + 1] -= h[i];
+        }
+        for (int i = 1; i <= A; i++)
+        {
+            for (int j = 1; j <= B; j++)
+            {
+                for (int k = 1; k <= C; k++)
+                {
+                    p[i][j][k] += p[i - 1][j][k];
+                    p[i][j][k] += p[i][j - 1][k];
+                    p[i][j][k] += p[i][j][k - 1];
+                    p[i][j][k] -= p[i - 1][j - 1][k];
+                    p[i][j][k] -= p[i - 1][j][k - 1];
+                    p[i][j][k] -= p[i][j - 1][k - 1];
+                    p[i][j][k] += p[i - 1][j - 1][k - 1];
+                    if (p[i][j][k] > a[i][j][k])
+                    {
+                        return 1;
+                    }
+                }
+            }
+        }
+        return 0;
+    };
+
+    int down = 1, up = m;
+    while (down < up)
+    {
+        int mid = (down + up) >> 1;
+        if (check(mid))
+        {
+            up = mid;
+        }
+        else
+        {
+            down = mid + 1;
+        }
+    }
+    cout << down << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
