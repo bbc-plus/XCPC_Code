@@ -1,0 +1,137 @@
+#include <bits/stdc++.h>
+using namespace std;
+using i64 = long long;
+
+#define lc (p << 1)
+#define rc (p << 1 | 1)
+
+const int maxn = 3e5 + 6;
+
+struct node
+{
+    int l, r, tag;
+} tr[maxn * 4];
+
+void pushup(int p)
+{
+    tr[p].tag = min(tr[lc].tag, tr[rc].tag);
+}
+
+void build(int p, int l, int r)
+{
+    if (l == r)
+    {
+        tr[p] = {l, r, (int)1e6};
+        return;
+    }
+    int mid = l + r >> 1;
+    build(lc, l, mid);
+    build(rc, mid + 1, r);
+    tr[p] = {l, r, min(tr[lc].tag, tr[rc].tag)};
+}
+
+void update(int p, int x, int k)
+{
+    if (tr[p].l == x && tr[p].r == x)
+    {
+        tr[p].tag = k;
+        return;
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    if (x <= mid)
+        update(lc, x, k);
+    else
+        update(rc, x, k);
+    pushup(p);
+}
+
+int query(int p, int x, int y)
+{
+    if (x <= tr[p].l && tr[p].r <= y)
+        return tr[p].tag;
+    int mid = tr[p].l + tr[p].r >> 1;
+    int tag = 1e6;
+    if (x <= mid)
+        tag = min(tag, query(lc, x, y));
+    if (y > mid)
+        tag = min(tag, query(rc, x, y));
+    return tag;
+}
+
+void solve()
+{
+    int n;
+    i64 m, k;
+    cin >> n >> m >> k;
+
+    vector<i64> a(n + 1);
+    set<i64> st;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        st.insert(a[i]);
+        if (a[i] - k >= 1)
+            st.insert(a[i] - k);
+        if (a[i] + k <= m)
+            st.insert(a[i] + k);
+    }
+    st.insert(1);
+    st.insert(m);
+
+    build(1, 1, st.size());
+    map<i64, int> id;
+    int idx = 0;
+    for (auto x : st)
+    {
+        ++idx;
+        id[x] = idx;
+    }
+
+    vector<int> pos1(n + 1, -1), pos2(n + 1, -1);
+    for (int i = n; i >= 1; i--)
+    {
+        i64 num1 = max(1LL, a[i] - k);
+        i64 num2 = min(m, a[i] + k);
+        pos1[i] = query(1, id[num1], id[a[i]]);
+        pos2[i] = query(1, id[a[i]], id[num2]);
+        update(1, id[a[i]], i);
+    }
+
+    int q;
+    cin >> q;
+    while (q--)
+    {
+        int l, r;
+        cin >> l >> r;
+        vector<int> dp(r - l + 1, 1);
+        int ans = 0;
+        for (int i = l; i <= r; i++)
+        {
+            ans = max(ans, dp[i - l]);
+            if (pos1[i] <= r)
+            {
+                dp[pos1[i] - l] = max(dp[pos1[i] - l], dp[i - l] + 1);
+            }
+            if (pos2[i] <= r)
+            {
+                dp[pos2[i] - l] = max(dp[pos2[i] - l], dp[i - l] + 1);
+            }
+        }
+        cout << r - l + 1 - ans << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
