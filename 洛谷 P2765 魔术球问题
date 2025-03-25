@@ -1,0 +1,191 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+template <typename T>
+struct Flow_
+{
+    const int n;
+    const T inf = numeric_limits<T>::max();
+    struct Edge
+    {
+        int to;
+        T w;
+        Edge(int to, T w) : to(to), w(w) {}
+    };
+    vector<Edge> ver;
+    vector<vector<int>> h;
+    vector<int> cur, d;
+
+    Flow_(int n) : n(n + 1), h(n + 1) {}
+    void add(int u, int v, T c)
+    {
+        h[u].push_back(ver.size());
+        ver.emplace_back(v, c);
+        h[v].push_back(ver.size());
+        ver.emplace_back(u, 0);
+    }
+    void remove(int u, int v)
+    {
+        h[u].pop_back();
+        h[v].pop_back();
+        ver.pop_back();
+        ver.pop_back();
+    }
+    bool bfs(int s, int t)
+    {
+        d.assign(n, -1);
+        d[s] = 0;
+        queue<int> q;
+        q.push(s);
+        while (!q.empty())
+        {
+            auto x = q.front();
+            q.pop();
+            for (auto it : h[x])
+            {
+                auto [y, w] = ver[it];
+                if (w && d[y] == -1)
+                {
+                    d[y] = d[x] + 1;
+                    if (y == t)
+                        return true;
+                    q.push(y);
+                }
+            }
+        }
+        return false;
+    }
+    T dfs(int u, int t, T f)
+    {
+        if (u == t)
+            return f;
+        auto r = f;
+        for (int &i = cur[u]; i < h[u].size(); i++)
+        {
+            auto j = h[u][i];
+            auto &[v, c] = ver[j];
+            auto &[u, rc] = ver[j ^ 1];
+            if (c && d[v] == d[u] + 1)
+            {
+                auto a = dfs(v, t, std::min(r, c));
+                c -= a;
+                rc += a;
+                r -= a;
+                if (!r)
+                    return f;
+            }
+        }
+        return f - r;
+    }
+    T work(int s, int t)
+    {
+        T ans = 0;
+        while (bfs(s, t))
+        {
+            cur.assign(n, 0);
+            ans += dfs(s, t, inf);
+        }
+        return ans;
+    }
+};
+using Flow = Flow_<i64>;
+
+void solve()
+{
+    int N;
+    cin >> N;
+    Flow flow(5006);
+    int ball = 0, s = 0, t = 5001, colnum = 0;
+    while (1)
+    {
+        ball++;
+        auto check = [&](int x) -> bool
+        {
+            int sqt = sqrt(x);
+            if (sqt * sqt == x)
+            {
+                return 1;
+            }
+            return 0;
+        };
+        for (int i = 1; i < ball; i++)
+        {
+            if (check(ball + i))
+            {
+                flow.add(i, ball + 2500, 1);
+            }
+        }
+        flow.add(s, ball, 1);
+        flow.add(ball + 2500, t, 1);
+        int res = flow.work(s, t);
+        if (res == 0)
+        {
+            colnum++;
+        }
+        if (colnum > N)
+        {
+            for (int i = 1; i < ball; i++)
+            {
+                if (check(ball + i))
+                {
+                    flow.remove(i, ball + 2500);
+                }
+            }
+            flow.remove(s, ball);
+            flow.remove(ball + 2500, t);
+            flow.work(s, t);
+            ball--;
+            break;
+        }
+    }
+    cout << ball << '\n';
+    vector<int> deg(ball + 1, 0), nxt(ball + 1, 0);
+    for (int i = 1; i <= ball; i++)
+    {
+        for (auto pos : flow.h[i])
+        {
+            auto [to, w] = flow.ver[pos];
+            if (to != 0 && w == 0)
+            {
+                to -= 2500;
+                nxt[i] = to;
+                deg[to]++;
+            }
+        }
+    }
+    for (int i = 1; i <= ball; i++)
+    {
+        if (deg[i] == 0)
+        {
+            vector<int> ans;
+            int cur = i;
+            while (cur != 0)
+            {
+                ans.push_back(cur);
+                cur = nxt[cur];
+            }
+            for (int k = 0; k < ans.size(); k++)
+            {
+                cout << ans[k] << " \n"[k == (int)(ans.size()) - 1];
+            }
+        }
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
