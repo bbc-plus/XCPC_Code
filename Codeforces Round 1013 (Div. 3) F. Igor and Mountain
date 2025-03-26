@@ -1,0 +1,75 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m, d;
+    cin >> n >> m >> d;
+    const int MOD = 998244353;
+    vector<vector<char>> g(n + 2, vector<char>(m + 2));
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            cin >> g[i][j];
+        }
+    }
+    vector<vector<int>> f(n + 2, vector<int>(m + 2)), p(n + 2, vector<int>(m + 2));
+    for (int i = n; i >= 1; i--)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            if (g[i][j] == 'X')
+            {
+                if (i == n)
+                {
+                    f[i][j] = 1;
+                }
+                else
+                {
+                    int r = d - 1;
+                    f[i][j] = p[i + 1][min(m, j + r)] - p[i + 1][max(0LL, j - r - 1)];
+                    f[i][j] %= MOD;
+                    f[i][j] += MOD;
+                    f[i][j] %= MOD;
+                }
+            }
+            p[i][j] = p[i][j - 1] + f[i][j];
+            p[i][j] %= MOD;
+        }
+        for (int j = 1; j <= m; j++)
+        {
+            if (g[i][j] == 'X')
+            {
+                f[i][j] = p[i][min(m, j + d)] - p[i][max(0LL, j - d - 1)];
+                f[i][j] %= MOD;
+                f[i][j] += MOD;
+                f[i][j] %= MOD;
+            }
+        }
+        for (int j = 1; j <= m; j++)
+        {
+            p[i][j] = p[i][j - 1] + f[i][j];
+            p[i][j] %= MOD;
+        }
+    }
+    cout << p[1][m] << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
