@@ -1,0 +1,99 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+    }
+
+    vector<int> last(n + 1, -1), nxt(n + 1, -1);
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = i - 1; j >= 1; j--)
+        {
+            if (__gcd(a[i], a[j]) != 1)
+            {
+                last[i] = j;
+                break;
+            }
+        }
+        for (int j = i + 1; j <= n; j++)
+        {
+            if (__gcd(a[i], a[j]) != 1)
+            {
+                nxt[i] = j;
+                break;
+            }
+        }
+    }
+
+    vector<vector<bool>> sts(n + 1, vector<bool>(n + 1, 0));
+    for (int l = 1; l < n; l++)
+    {
+        vector<int> num(n + 1, 0);
+        int sum = 0;
+        for (int r = l; r <= n; r++)
+        {
+            sum += num[r];
+            if (last[r] != -1 && last[r] >= l)
+            {
+                sum++;
+            }
+            else if (nxt[r] != -1)
+            {
+                num[nxt[r]]++;
+            }
+            if (sum == r - l + 1)
+            {
+                sts[l][r] = 1;
+            }
+        }
+    }
+
+    vector<int> dp(n + 1, 0);
+    for (int i = 1; i <= n; i++)
+    {
+        if (sts[1][i] == 1)
+        {
+            dp[i] = 1;
+        }
+        for (int j = i - 2; j >= 1; j--)
+        {
+            if (sts[j + 1][i] == 1 && dp[j] != 0)
+            {
+                dp[i] = max(dp[i], dp[j] + 1);
+            }
+        }
+    }
+    if (dp[n] == 0)
+    {
+        cout << -1 << '\n';
+    }
+    else
+    {
+        cout << dp[n] << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
