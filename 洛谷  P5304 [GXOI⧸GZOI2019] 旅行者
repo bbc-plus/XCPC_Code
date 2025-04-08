@@ -1,0 +1,93 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m, k;
+    cin >> n >> m >> k;
+    vector<tuple<int, int, int>> tmp(m + 1);
+    for (int i = 1; i <= m; i++)
+    {
+        auto &[u, v, w] = tmp[i];
+        cin >> u >> v >> w;
+    }
+
+    vector<vector<pair<int, int>>> e1(n + 1), e2(n + 1);
+    for (int i = 1; i <= m; i++)
+    {
+        auto [u, v, w] = tmp[i];
+        e1[u].push_back({v, w});
+        e2[v].push_back({u, w});
+    }
+    vector<int> col1(n + 1, 0), col2(n + 1, 0), st;
+    for (int i = 1; i <= k; i++)
+    {
+        int x;
+        cin >> x;
+        e1[0].push_back({x, 0});
+        e2[0].push_back({x, 0});
+        st.push_back(x);
+    }
+
+    auto dijkstra = [&](vector<vector<pair<int, int>>> &e, vector<int> &col) -> vector<int>
+    {
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+        vector<int> vis(n + 1, 0);
+        vector<int> dis(n + 1, numeric_limits<int>::max() / 6);
+        for (auto x : st)
+        {
+            dis[x] = 0;
+            col[x] = x;
+            pq.push({0, x});
+        }
+        while (!pq.empty())
+        {
+            auto [minDis, cur] = pq.top();
+            pq.pop();
+            if (vis[cur] == 1)
+                continue;
+            vis[cur] = 1;
+            for (auto [nxt, len] : e[cur])
+            {
+                if (vis[nxt] == 1)
+                    continue;
+                if (minDis + len < dis[nxt])
+                {
+                    dis[nxt] = minDis + len;
+                    col[nxt] = col[cur];
+                    pq.push({dis[nxt], nxt});
+                }
+            }
+        }
+        return dis;
+    };
+    vector<int> d1 = dijkstra(e1, col1);
+    vector<int> d2 = dijkstra(e2, col2);
+
+    int ans = numeric_limits<int>::max();
+    for (int i = 1; i <= m; i++)
+    {
+        auto [u, v, w] = tmp[i];
+        if (col1[u] && col2[v] && col1[u] != col2[v])
+            ans = min(ans, w + d1[u] + d2[v]);
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
