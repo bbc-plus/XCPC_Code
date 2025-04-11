@@ -1,0 +1,86 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+using i64 = long long;
+using u64 = unsigned long long;
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<int> a1(n + 1), a2(m + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a1[i];
+    }
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> a2[i];
+    }
+
+    vector<vector<int>> e1(n + 1, vector<int>()), e2(m + 1, vector<int>());
+    for (int i = 1; i < n; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e1[u].push_back(v);
+        e1[v].push_back(u);
+    }
+    for (int i = 1; i < m; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e2[u].push_back(v);
+        e2[v].push_back(u);
+    }
+
+    int mod1 = 1e9 + 409;
+    int mod2 = 1e9 + 411;
+    int base1 = 131;
+    int base2 = 13331;
+    vector<map<pair<int, int>, int>> mp(max(n, m) + 1);
+    int ans = 0;
+    auto dfs = [&](auto dfs, int u, int fa, int last1, int last2, int ceng, int op, vector<vector<int>> &e, vector<int> &a) -> void
+    {
+        int num1 = (last1 * base1 + a[u]) % mod1;
+        int num2 = (last2 * base2 + a[u]) % mod2;
+        if (op == 1)
+        {
+            mp[ceng][{num1, num2}] = 1;
+        }
+        else
+        {
+            if (ans < ceng && mp[ceng].count({num1, num2}))
+            {
+                ans = max(ans, ceng);
+            }
+        }
+        for (auto v : e[u])
+        {
+            if (v == fa)
+            {
+                continue;
+            }
+            dfs(dfs, v, u, num1, num2, ceng + 1, op, e, a);
+        }
+    };
+    dfs(dfs, 1, 0, 0, 0, 1, 1, e1, a1);
+    dfs(dfs, 1, 0, 0, 0, 1, 2, e2, a2);
+
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
