@@ -1,0 +1,195 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+struct Fenwick
+{
+    int n;
+    vector<int> tr;
+    Fenwick(int _n)
+    {
+        n = _n;
+        tr.resize(n + 1, 0);
+    }
+    int lowbit(int x)
+    {
+        return x & -x;
+    }
+    void update(int x, int val)
+    {
+        while (x <= n)
+        {
+            tr[x] += val;
+            x += lowbit(x);
+        }
+    }
+    void update(int l, int r, int val)
+    {
+        update(l, val);
+        update(r + 1, -val);
+    }
+    int query(int x)
+    {
+        int res = 0;
+        while (x)
+        {
+            res += tr[x];
+            x -= lowbit(x);
+        }
+        return res;
+    }
+};
+
+struct ACAutomaton
+{
+    static constexpr int N = 1e6 + 10;
+    int ch[N][26], fail[N], cntNodes;
+    int cnt[N];
+    ACAutomaton()
+    {
+        cntNodes = 1;
+    }
+    void insert(string s)
+    {
+        int u = 1;
+        for (auto c : s)
+        {
+            int &v = ch[u][c - 'a'];
+            if (!v)
+                v = ++cntNodes;
+            u = v;
+        }
+        cnt[u]++;
+    }
+    void add(int u, char c)
+    {
+        ch[u][c - 'a'] = ++cntNodes;
+    }
+    void build()
+    {
+        fill(ch[0], ch[0] + 26, 1);
+        queue<int> q;
+        q.push(1);
+        while (!q.empty())
+        {
+            int u = q.front();
+            q.pop();
+            for (int i = 0; i < 26; i++)
+            {
+                int &v = ch[u][i];
+                if (!v)
+                    v = ch[fail[u]][i];
+                else
+                {
+                    fail[v] = ch[fail[u]][i];
+                    q.push(v);
+                }
+            }
+        }
+    }
+    void clear()
+    {
+        for (int i = 1; i <= cntNodes; i++)
+        {
+            cnt[i] = 0;
+            for (int j = 0; j < 26; j++)
+            {
+                ch[i][j] = 0;
+            }
+        }
+        cntNodes = 1;
+    }
+} aca;
+
+void solve()
+{
+    aca.clear();
+    int n;
+    cin >> n;
+    for (int i = 0; i < n - 1; i++)
+    {
+        int u;
+        char c;
+        cin >> u >> c;
+        aca.add(u, c);
+    }
+    aca.build();
+    vector<vector<int>> e(n + 1);
+    for (int i = 2; i <= n; i++)
+    {
+        e[aca.fail[i]].push_back(i);
+    }
+    vector<int> id(n + 1), siz(n + 1);
+    int idx = 0;
+    auto dfs = [&](auto dfs, int u) -> void
+    {
+        id[u] = ++idx;
+        siz[id[u]] = 1;
+        for (auto v : e[u])
+        {
+            dfs(dfs, v);
+            siz[id[u]] += siz[id[v]];
+        }
+    };
+    dfs(dfs, 1);
+    Fenwick fenwick(n);
+    int m;
+    cin >> m;
+    while (m--)
+    {
+        int op;
+        cin >> op;
+        if (op == 1)
+        {
+            int k;
+            cin >> k;
+            vector<pair<int, int>> itv;
+            while (k--)
+            {
+                int x;
+                cin >> x;
+                x = id[x];
+                itv.push_back({x, x + siz[x] - 1});
+            }
+            sort(itv.begin(), itv.end());
+            int l = itv[0].first, r = itv[0].second;
+            for (int i = 1; i < itv.size(); i++)
+            {
+                auto [nl, nr] = itv[i];
+                if (nl <= r)
+                {
+                    r = max(nr, r);
+                }
+                else
+                {
+                    fenwick.update(l, r, 1);
+                    l = nl;
+                    r = nr;
+                }
+            }
+            fenwick.update(l, r, 1);
+        }
+        else
+        {
+            int x;
+            cin >> x;
+            x = id[x];
+            cout << fenwick.query(x) << '\n';
+        }
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
