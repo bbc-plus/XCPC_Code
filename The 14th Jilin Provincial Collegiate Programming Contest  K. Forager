@@ -1,0 +1,216 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+using i64 = long long;
+
+struct MinCostFlow
+{
+    using PLI = pair<i64, int>;
+    const i64 INF = numeric_limits<i64>::max();
+    struct Edge
+    {
+        int v, c, f;
+        Edge(int v, int c, int f) : v(v), c(c), f(f) {}
+    };
+    const int n;
+    vector<Edge> e;
+    vector<vector<int>> g;
+    vector<i64> h, dis;
+    vector<int> pre;
+    MinCostFlow(int n) : n(n + 1), g(n + 1) {}
+    void add(int u, int v, int c, int f) // c 流量, f 费用
+    {
+        g[u].push_back(e.size());
+        e.emplace_back(v, c, f);
+        g[v].push_back(e.size());
+        e.emplace_back(u, 0, -f);
+    }
+    bool dijkstra(int s, int t)
+    {
+        dis.assign(n, INF);
+        pre.assign(n, -1);
+        priority_queue<PLI, vector<PLI>, greater<PLI>> que;
+        dis[s] = 0;
+        que.emplace(0, s);
+        while (!que.empty())
+        {
+            auto [d, u] = que.top();
+            que.pop();
+            if (dis[u] < d)
+                continue;
+            for (int i : g[u])
+            {
+                auto [v, c, f] = e[i];
+                if (c > 0 && dis[v] > d + h[u] - h[v] + f)
+                {
+                    dis[v] = d + h[u] - h[v] + f;
+                    pre[v] = i;
+                    que.emplace(dis[v], v);
+                }
+            }
+        }
+        return dis[t] != INF;
+    }
+    pair<int, i64> flow(int s, int t)
+    {
+        int flow = 0;
+        i64 cost = 0;
+        h.assign(n, 0);
+        while (dijkstra(s, t))
+        {
+            for (int i = 0; i < n; ++i)
+                h[i] += dis[i];
+            int aug = numeric_limits<int>::max();
+            for (int i = t; i != s; i = e[pre[i] ^ 1].v)
+                aug = min(aug, e[pre[i]].c);
+            for (int i = t; i != s; i = e[pre[i] ^ 1].v)
+            {
+                e[pre[i]].c -= aug;
+                e[pre[i] ^ 1].c += aug;
+            }
+
+            if (h[t] >= 0)
+                break;
+
+            flow += aug;
+            cost += i64(aug) * h[t];
+        }
+        return {flow, cost};
+    }
+};
+
+void solve()
+{
+    int n, m, A, B;
+    cin >> n >> m >> A >> B;
+    vector<vector<char>> g(n, vector<char>(m));
+    vector<vector<int>> id(n, vector<int>(m)), val(n, vector<int>(m)), cost(n, vector<int>(m));
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            cin >> g[i][j];
+            id[i][j] = i * m + j;
+        }
+    }
+    for (int i = 0; i < A; i++)
+    {
+        int x, y;
+        cin >> x >> y;
+        x--;
+        y--;
+        cin >> val[x][y];
+    }
+    for (int i = 0; i < B; i++)
+    {
+        int x, y;
+        cin >> x >> y;
+        x--;
+        y--;
+        cin >> cost[x][y];
+    }
+    int s = n * m;
+    int t = s + 1;
+    MinCostFlow flow(t + n * m);
+    map<char, int> mp;
+    mp['U'] = 0, mp['R'] = 1, mp['D'] = 2, mp['L'] = 3;
+    mp['^'] = 0, mp['>'] = 1, mp['v'] = 2, mp['<'] = 3;
+    int d[4][2] = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+    auto check = [&](int x, int y) -> bool
+    {
+        if (x < 0 || x >= n || y < 0 || y >= m)
+        {
+            return 0;
+        }
+        if (g[x][y] == '#')
+        {
+            return 0;
+        }
+        return 1;
+    };
+    auto construct = [&](int sx, int sy, char type) -> void
+    {
+        int u = id[sx][sy];
+        if (type == 'x')
+        {
+            flow.add(u, t, 1, -val[sx][sy]);
+        }
+        else if (type == 'U' || type == 'D' || type == 'L' || type == 'R')
+        {
+            flow.add(s, u, 1, 0);
+            int pos = mp[type];
+            int nx = sx + d[pos][0];
+            int ny = sy + d[pos][1];
+            while (check(nx, ny))
+            {
+                if (g[nx][ny] == 'x')
+                {
+                    flow.add(u, id[nx][ny], 1, 0);
+                    break;
+                }
+                else if (g[nx][ny] == '^' || g[nx][ny] == '>' || g[nx][ny] == 'v' || g[nx][ny] == '<')
+                {
+                    flow.add(u, id[nx][ny], 1, 0);
+                    break;
+                }
+                nx += d[pos][0];
+                ny += d[pos][1];
+            }
+        }
+        else
+        {
+            int v = t + 1 + u;
+            flow.add(u, v, 1, 0);
+            for (int tot = 0; tot < 4; tot++)
+            {
+                int curcost = tot * cost[sx][sy];
+                int pos = (mp[type] + tot) % 4;
+                int nx = sx + d[pos][0];
+                int ny = sy + d[pos][1];
+                while (check(nx, ny))
+                {
+                    if (g[nx][ny] == 'x')
+                    {
+                        flow.add(v, id[nx][ny], 1, curcost);
+                        break;
+                    }
+                    else if (g[nx][ny] == '^' || g[nx][ny] == '>' || g[nx][ny] == 'v' || g[nx][ny] == '<')
+                    {
+                        flow.add(v, id[nx][ny], 1, curcost);
+                        break;
+                    }
+                    nx += d[pos][0];
+                    ny += d[pos][1];
+                }
+            }
+        }
+    };
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if (g[i][j] == '.' || g[i][j] == '#')
+            {
+                continue;
+            }
+            construct(i, j, g[i][j]);
+        }
+    }
+    cout << -flow.flow(s, t).second << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
