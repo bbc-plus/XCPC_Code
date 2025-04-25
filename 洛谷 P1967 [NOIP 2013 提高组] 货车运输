@@ -1,0 +1,181 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+struct DSU
+{
+    std::vector<int> f, siz;
+    DSU() {}
+    DSU(int n)
+    {
+        init(n);
+    }
+    void init(int n)
+    {
+        f.resize(n + 1);
+        std::iota(f.begin(), f.end(), 0);
+        siz.assign(n + 1, 1);
+    }
+    int find(int x)
+    {
+        while (x != f[x])
+        {
+            x = f[x] = f[f[x]];
+        }
+        return x;
+    }
+    bool same(int x, int y)
+    {
+        return find(x) == find(y);
+    }
+    bool merge(int x, int y)
+    {
+        x = find(x);
+        y = find(y);
+        if (x == y)
+        {
+            return false;
+        }
+        siz[x] += siz[y];
+        f[y] = x;
+        return true;
+    }
+    int size(int x)
+    {
+        return siz[find(x)];
+    }
+};
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<array<int, 3>> vec(m);
+    for (int i = 0; i < m; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            cin >> vec[i][j];
+        }
+    }
+
+    vector<vector<pair<int, int>>> e(n + 1);
+    auto addedge = [&](int a, int b, int w) -> void
+    {
+        e[a].push_back({b, w});
+        e[b].push_back({a, w});
+    };
+    sort(vec.begin(), vec.end(), [&](array<int, 3> a, array<int, 3> b)
+         { return a[2] > b[2]; });
+    DSU dsu(n);
+    for (int i = 0; i < m; i++)
+    {
+        auto [a, b, w] = vec[i];
+        if (dsu.find(a) != dsu.find(b))
+        {
+            dsu.merge(a, b);
+            addedge(a, b, w);
+        }
+    }
+
+    set<int> st;
+    for (int i = 1; i <= n; i++)
+    {
+        st.insert(dsu.find(i));
+    }
+    vector<int> tmp;
+    for (auto x : st)
+    {
+        tmp.push_back(x);
+    }
+    for (int i = 1; i < tmp.size(); i++)
+    {
+        addedge(tmp[i - 1], tmp[i], -1);
+    }
+
+    int inf = 1e16;
+    vector<int> dep(n + 1);
+    vector<vector<int>> f(n + 1, vector<int>(16)), mindis(n + 1, vector<int>(16, inf));
+    vector<int> lg(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        lg[i] = lg[i - 1] + (1 << lg[i - 1] == i);
+    }
+
+    auto dfs = [&](auto dfs, int u, int fa) -> void
+    {
+        f[u][0] = fa;
+        dep[u] = dep[fa] + 1;
+        for (int i = 1; i <= lg[dep[u]]; i++)
+        {
+            f[u][i] = f[f[u][i - 1]][i - 1];
+            mindis[u][i] = min(mindis[u][i - 1], mindis[f[u][i - 1]][i - 1]);
+        }
+        for (auto [v, w] : e[u])
+        {
+            if (v == fa)
+            {
+                continue;
+            }
+            mindis[v][0] = w;
+            dfs(dfs, v, u);
+        }
+    };
+    dfs(dfs, 1, 0);
+
+    auto LCA = [&](int x, int y) -> int
+    {
+        int res = inf;
+        if (dep[x] < dep[y])
+        {
+            swap(x, y);
+        }
+        while (dep[x] > dep[y])
+        {
+            int pos = lg[dep[x] - dep[y]] - 1;
+            res = min(res, mindis[x][pos]);
+            x = f[x][pos];
+        }
+        if (x == y)
+        {
+            return res;
+        }
+        for (int k = lg[dep[x]] - 1; k >= 0; k--)
+        {
+            if (f[x][k] != f[y][k])
+            {
+                res = min(res, mindis[x][k]);
+                res = min(res, mindis[y][k]);
+                x = f[x][k];
+                y = f[y][k];
+            }
+        }
+        res = min(res, mindis[x][0]);
+        res = min(res, mindis[y][0]);
+        return res;
+    };
+
+    int Q;
+    cin >> Q;
+    while (Q--)
+    {
+        int u, v;
+        cin >> u >> v;
+        cout << LCA(u, v) << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
