@@ -1,0 +1,159 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<vector<int>> e(n + 1);
+    for (int i = 0; i < n - 1; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+    int r, t0;
+    cin >> r >> t0;
+
+    // 预处理树上两点距离
+    vector<int> dep(n + 1, 0), lg(n + 1, 0);
+    vector<vector<int>> f(n + 1, vector<int>(26));
+    for (int i = 1; i <= n; i++)
+    {
+        lg[i] = lg[i - 1] + ((1LL << lg[i - 1]) == i);
+    }
+    auto dfs = [&](auto dfs, int from, int fa) -> void
+    {
+        f[from][0] = fa;
+        dep[from] = dep[fa] + 1;
+        for (int i = 1; i <= lg[dep[from]]; i++)
+        {
+            f[from][i] = f[f[from][i - 1]][i - 1];
+        }
+        for (auto to : e[from])
+        {
+            if (to == fa)
+            {
+                continue;
+            }
+            dfs(dfs, to, from);
+        }
+    };
+    dfs(dfs, r, 0);
+    auto LCA = [&](int x, int y) -> int
+    {
+        int dis = 0;
+        if (dep[x] < dep[y])
+        {
+            swap(x, y);
+        }
+        while (dep[x] > dep[y])
+        {
+            int pw = lg[dep[x] - dep[y]] - 1;
+            dis += 1LL << pw;
+            x = f[x][pw];
+        }
+        if (x == y)
+        {
+            return dis;
+        }
+        for (int k = lg[dep[x]] - 1; k >= 0; k--)
+        {
+            if (f[x][k] != f[y][k])
+            {
+                dis += 1LL << k;
+                dis += 1LL << k;
+                x = f[x][k];
+                y = f[y][k];
+            }
+        }
+        dis += 2;
+        return dis;
+    };
+
+    // 动态直径维护
+    vector<int> d(n + 1, 0), vis(n + 1, 0);
+    d[0] = 1;
+    int u = r, v = r;
+    queue<int> q;
+    q.push(r);
+    vis[r] = 1;
+    int idx = 0;
+    int maxdis = 1;
+    auto func = [&](int x, int y) -> void
+    {
+        int curdis = LCA(x, y);
+        if (curdis > maxdis)
+        {
+            maxdis = curdis;
+            u = x;
+            v = y;
+        }
+    };
+    while (1)
+    {
+        int _siz = q.size();
+        while (_siz--)
+        {
+            int from = q.front();
+            q.pop();
+            for (auto to : e[from])
+            {
+                if (vis[to] == 1)
+                {
+                    continue;
+                }
+                vis[to] = 1;
+                int lastu = u, lastv = v;
+                func(lastu, to);
+                func(lastv, to);
+                q.push(to);
+            }
+        }
+        if (q.empty())
+        {
+            break;
+        }
+        idx++;
+        d[idx] = maxdis;
+    }
+
+    // 双指针更新答案
+    vector<int> ans(n + 1);
+    int pos = n, t = t0;
+    while (1)
+    {
+        while (pos >= 1 && 2LL * (t - t0) * pos >= d[min(t, idx)])
+        {
+            ans[pos] = t;
+            pos--;
+        }
+        t++;
+        if (pos <= 0)
+        {
+            break;
+        }
+    }
+
+    for (int i = 1; i <= n; i++)
+    {
+        cout << ans[i] << " \n"[i == n];
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
