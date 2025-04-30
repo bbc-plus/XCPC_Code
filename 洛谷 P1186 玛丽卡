@@ -1,0 +1,251 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+template <class T>
+struct Segt_
+{
+    struct node
+    {
+        int l, r;
+        T rmq, lazy;
+    };
+    int inf = numeric_limits<T>::max() / 3;
+    vector<T> w;
+    vector<node> t;
+    Segt_(int n)
+    {
+        w.resize(n + 1, inf);
+        init(n);
+    }
+
+#define GL (k << 1)
+#define GR (k << 1 | 1)
+
+    void init(int n)
+    {
+        t.resize(n * 4 + 1);
+        auto build = [&](auto self, int l, int r, int k = 1)
+        {
+            if (l == r)
+            {
+                t[k] = {l, r, w[l], inf};
+                return;
+            }
+            t[k] = {l, r, inf, inf};
+            int mid = (l + r) / 2;
+            self(self, l, mid, GL);
+            self(self, mid + 1, r, GR);
+            pushup(k);
+        };
+        build(build, 1, n);
+    }
+    void pushdown(node &p, T lazy)
+    {
+        p.rmq = min(p.rmq, lazy);
+        p.lazy = min(p.lazy, lazy);
+    }
+    void pushdown(int k)
+    {
+        if (t[k].lazy == inf)
+            return;
+        pushdown(t[GL], t[k].lazy);
+        pushdown(t[GR], t[k].lazy);
+        t[k].lazy = inf;
+    }
+    void pushup(int k)
+    {
+        auto pushup = [&](node &p, node &l, node &r)
+        {
+            p.rmq = min(l.rmq, r.rmq);
+        };
+        pushup(t[k], t[GL], t[GR]);
+    }
+    void modify(int l, int r, T val, int k = 1)
+    {
+        if (l > r)
+        {
+            return;
+        }
+        if (l <= t[k].l && t[k].r <= r)
+        {
+            pushdown(t[k], val);
+            return;
+        }
+        pushdown(k);
+        int mid = (t[k].l + t[k].r) / 2;
+        if (l <= mid)
+            modify(l, r, val, GL);
+        if (mid < r)
+            modify(l, r, val, GR);
+        pushup(k);
+    }
+    T rmq(int l, int r, int k = 1)
+    {
+        if (l <= t[k].l && t[k].r <= r)
+        {
+            return t[k].rmq;
+        }
+        pushdown(k);
+        int mid = (t[k].l + t[k].r) / 2;
+        T ans = numeric_limits<T>::max() / 3;
+        if (l <= mid)
+            ans = min(ans, rmq(l, r, GL));
+        if (mid < r)
+            ans = min(ans, rmq(l, r, GR));
+        return ans;
+    }
+};
+using Segt = Segt_<int>;
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<vector<tuple<int, int, int>>> e(n + 1);
+    vector<int> a(m + 1), b(m + 1), w(m + 1);
+    for (int i = 1; i <= m; i++)
+    {
+        cin >> a[i] >> b[i] >> w[i]; // 连接 a[i] 和 b[i] 的长度为 w[i] 的边
+        e[a[i]].push_back({b[i], w[i], i});
+        e[b[i]].push_back({a[i], w[i], i});
+    }
+
+    // 令 1 到 n 的原最短路为 E，其路径为 E1,E2,E3……Ek
+    // inE 表示边是否在 E 中，point_in_E 表示点是否在 E 中
+    vector<int> inE(m + 1), point_in_E(n + 1);
+    // 对于每个不是 E 上的点 u，1 到 u 的最短路必定会使用 E 的一段前缀（可以为空）。令这个前缀为 Lu，1 到 u 的最短路经过 E1,E2,……E(Lu)
+    // 同理可得 u 到 n 的最短路必定会使用 E 的一段后缀（可以为空）。令这个后缀为 Ru, u 到 n 的最短路经过 E1, E2,……E(Ru)
+    // 特别地，对于 E 上的点 u，令其 L 为 E 上连接自己的边的编号，R 为自己连到下一个 E 上点的边的编号
+    vector<int> L(n + 1), R(n + 1);
+    // path 用来记录 E
+    vector<pair<int, int>> path(n + 1);
+    auto dijkstra = [&](int st, vector<vector<tuple<int, int, int>>> &e, int type) -> vector<int>
+    {
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+        vector<int> vis(n + 1, 0);
+        vector<int> dis(n + 1, numeric_limits<int>::max() / 6);
+        dis[st] = 0;
+        pq.push({0, st});
+        while (!pq.empty())
+        {
+            auto [minDis, cur] = pq.top();
+            pq.pop();
+            if (vis[cur] == 1)
+                continue;
+            vis[cur] = 1;
+            for (auto [nxt, len, id] : e[cur])
+            {
+                if (vis[nxt] == 1)
+                    continue;
+                if (minDis + len < dis[nxt])
+                {
+                    dis[nxt] = minDis + len;
+                    if (type == 0)
+                    {
+                        path[nxt] = {cur, id};
+                    }
+                    else if (type == 1)
+                    {
+                        if (point_in_E[nxt] == 0)
+                        {
+                            L[nxt] = L[cur];
+                        }
+                    }
+                    else if (type == 2)
+                    {
+                        if (point_in_E[nxt] == 0)
+                        {
+                            R[nxt] = R[cur];
+                        }
+                    }
+                    pq.push({dis[nxt], nxt});
+                }
+            }
+        }
+        return dis;
+    };
+
+    dijkstra(1, e, 0); // 从 1 到 n 跑一遍 Dijkstra，求出 E
+    int curpos = n;
+    point_in_E[curpos] = 1;
+    vector<int> bian; // 记录 E 上边的编号
+    while (curpos != 1)
+    {
+        int bian_id = path[curpos].second;
+        int nxtpos = path[curpos].first;
+
+        L[curpos] = bian_id;
+        R[nxtpos] = bian_id;
+
+        inE[bian_id] = 1;
+        bian.push_back(bian_id);
+
+        curpos = nxtpos;
+        point_in_E[curpos] = 1;
+    }
+
+    vector<int> dis_from_1 = dijkstra(1, e, 1);
+    vector<int> dis_from_n = dijkstra(n, e, 2);
+
+    // 按顺序为 E 上的边重新编号
+    map<int, int> mp;
+    int idx = 0;
+    mp[0] = 0;
+    for (int i = (int)bian.size() - 1; i >= 0; i--)
+    {
+        mp[bian[i]] = ++idx;
+    }
+
+    // 线段树，树上的每段区间 [l,r] 的值表示整个图不经过 E 上 l 到 r 这段的最短路长度
+    Segt seg(idx);
+    for (int i = 1; i <= m; i++)
+    {
+        if (inE[i] == 0)
+        {
+            // 经过该边的最短路不会经过 E 上 L[u] + 1 到 R[v] - 1 这段
+            int l1 = mp[L[a[i]]] + 1;
+            int r1 = mp[R[b[i]]] - 1;
+            if (r1 == -1) // R[v] - 1 等于 -1 说明使用的 E 的后缀为空
+                r1 = idx;
+            seg.modify(l1, r1, dis_from_1[a[i]] + dis_from_n[b[i]] + w[i]);
+
+            // 经过该边的最短路不会经过 E 上 L[v] + 1 到 R[u] - 1 这段
+            int l2 = mp[L[b[i]]] + 1;
+            int r2 = mp[R[a[i]]] - 1;
+            if (r2 == -1) // R[u] - 1 等于 -1 说明使用的 E 的后缀为空
+                r2 = idx;
+            seg.modify(l2, r2, dis_from_1[b[i]] + dis_from_n[a[i]] + w[i]);
+        }
+    }
+
+    // 求删边最短路的最大值
+    int ans = 0;
+    for (int i = 1; i <= m; i++)
+    {
+        if (inE[i] == 1)
+        {
+            ans = max(ans, seg.rmq(mp[i], mp[i]));
+        }
+        else
+        {
+            ans = max(ans, dis_from_1[n]);
+        }
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
