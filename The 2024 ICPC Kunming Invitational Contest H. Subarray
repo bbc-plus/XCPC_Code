@@ -1,0 +1,199 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+const int mod = 998244353;
+const int G = 3;
+const int maxn = 1e6 + 6;
+
+using i64 = long long;
+
+int QuickPow(int a, int k)
+{
+    int ret = 1;
+    while (k)
+    {
+        if (k & 1)
+            ret = 1LL * ret * a % mod;
+        a = 1LL * a * a % mod;
+        k >>= 1;
+    }
+    return ret;
+}
+
+int rev[3 * maxn];
+
+inline void GetReverse(int len, int lg)
+{
+    for (int i = 0; i < len; i++)
+        rev[i] = 0;
+    for (int i = 0; i < len; i++)
+        rev[i] = (rev[i >> 1] >> 1) | ((i & 1) << (lg - 1));
+}
+
+void NTT(vector<int> &a, int dir)
+{
+    int len = a.size();
+    for (int i = 0; i < len; i++)
+        if (i < rev[i])
+            swap(a[i], a[rev[i]]);
+    int g = (dir == 1 ? G : QuickPow(G, mod - 2));
+    for (int stp = 1; stp < len; stp <<= 1)
+    {
+        int wn = QuickPow(g, (mod - 1) / (stp << 1));
+        int w = 1;
+        for (int k = 0; k < stp; k++)
+        {
+            for (int even = k; even < len; even += stp << 1)
+            {
+                int odd = even + stp;
+                int tmp = 1LL * w * a[odd] % mod;
+                a[odd] = (a[even] - tmp + mod) % mod;
+                a[even] = (i64)(a[even] + tmp) % mod;
+            }
+            w = 1LL * w * wn % mod;
+        }
+    }
+    if (dir == -1)
+    {
+        int inv = QuickPow(len, mod - 2);
+        for (int i = 0; i < len; i++)
+            a[i] = 1LL * a[i] * inv % mod;
+    }
+}
+
+vector<int> cal(vector<int> v1, vector<int> v2)
+{
+    int n = v1.size(), m = v2.size();
+    int lg = 0;
+    int bound = 1;
+    while (bound <= n + m)
+    {
+        bound <<= 1;
+        lg++;
+    }
+    GetReverse(bound, lg);
+    vector<int> f(bound, 0), g(bound, 0);
+    for (int i = 0; i < n; i++)
+    {
+        f[n - i] = v1[i];
+    }
+    for (int i = 0; i < m; i++)
+    {
+        g[i] = v2[i];
+    }
+    NTT(f, 1);
+    NTT(g, 1);
+    for (int i = 0; i < bound; i++)
+    {
+        f[i] = (1LL * f[i] * g[i]) % mod;
+    }
+    NTT(f, -1);
+    return f;
+}
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 2), l(n + 1), r(n + 1);
+    set<int> st;
+    map<int, int> mp;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        st.insert(a[i]);
+    }
+    int idx = -1;
+    for (auto x : st)
+    {
+        mp[x] = ++idx;
+    }
+    vector<vector<int>> pos(idx + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        pos[mp[a[i]]].push_back(i);
+    }
+
+    deque<int> dq;
+    int inf = 2e9;
+    a[0] = a[n + 1] = inf;
+    dq.push_back(0);
+    for (int i = 1; i <= n; i++)
+    {
+        while (!dq.empty() && a[dq.back()] < a[i])
+        {
+            dq.pop_back();
+        }
+        l[i] = dq.back();
+        dq.push_back(i);
+    }
+    dq.clear();
+    dq.push_back(n + 1);
+    for (int i = n; i >= 1; i--)
+    {
+        while (!dq.empty() && a[dq.back()] < a[i])
+        {
+            dq.pop_back();
+        }
+        r[i] = dq.back();
+        dq.push_back(i);
+    }
+
+    vector<int> c(n + 1);
+    for (auto vec : pos)
+    {
+        vector<int> v1, v2;
+        v1.push_back(vec[0] - l[vec[0]]);
+        v2.push_back(r[vec[0]] - vec[0]);
+        for (int i = 1; i < vec.size(); i++)
+        {
+            if (r[vec[i - 1]] < vec[i])
+            {
+                vector<int> res = cal(v1, v2);
+                int len = v1.size();
+                for (int i = 1; i <= len; i++)
+                {
+                    c[i] += res[i + len - 1];
+                }
+                v1.clear();
+                v2.clear();
+            }
+            int p = vec[i];
+            v1.push_back(p - l[p]);
+            v2.push_back(r[p] - p);
+        }
+        vector<int> res = cal(v1, v2);
+        int len = v1.size();
+        for (int i = 1; i <= len; i++)
+        {
+            c[i] += res[i + len - 1];
+        }
+        v1.clear();
+        v2.clear();
+    }
+
+    int ans = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        c[i] %= mod;
+        ans += i * c[i] % mod * c[i] % mod;
+        ans %= mod;
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
