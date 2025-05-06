@@ -1,0 +1,147 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> t(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> t[i];
+    }
+    vector<vector<int>> e(n + 1);
+    for (int i = 0; i < n; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+
+    // 不考虑自环重边情况下
+    int dfnid = 0;
+    vector<int> dfn(n + 1, 0);
+    vector<int> last(n + 1, 0);
+    vector<int> loop;
+    auto dfs = [&](auto dfs, int u, int fa) -> void
+    {
+        dfn[u] = ++dfnid;
+        for (auto v : e[u])
+        {
+            if (v == fa)
+            {
+                continue;
+            }
+            if (dfn[v] != 0)
+            {
+                if (dfn[v] < dfn[u])
+                {
+                    int cur = u;
+                    while (1)
+                    {
+                        loop.push_back(cur);
+                        cur = last[cur];
+                        if (cur == v)
+                        {
+                            loop.push_back(cur);
+                            break;
+                        }
+                    }
+                }
+                continue;
+            };
+            last[v] = u;
+            dfs(dfs, v, u);
+        }
+    };
+    dfs(dfs, 1, 0);
+    assert(loop.size() >= 3); // 不考虑自环重边情况下环长至少为 3
+
+    vector<int> vis(n + 1, 0), d1(n + 1, 0), d2(n + 1, 0);
+    for (auto x : loop)
+    {
+        vis[x] = 1;
+    }
+    int ans = 0;
+    auto cal = [&](auto cal, int u) -> int
+    {
+        vis[u] = 1;
+        for (auto v : e[u])
+        {
+            if (vis[v] == 1)
+            {
+                continue;
+            }
+            int res = cal(cal, v);
+            if (res > d1[u])
+            {
+                d2[u] = d1[u];
+                d1[u] = res;
+            }
+            else if (res > d2[u])
+            {
+                d2[u] = res;
+            }
+        }
+        ans = max(ans, d1[u] + d2[u] + t[u]);
+        return d1[u] + t[u];
+    };
+    int sum = 0;
+    for (auto x : loop)
+    {
+        cal(cal, x);
+        sum += (t[x] == 1);
+    }
+    for (auto x : loop)
+    {
+        ans = max(ans, d1[x] + d2[x] + sum);
+    }
+
+    int cnt = loop.size() * 2;
+    loop.insert(loop.begin(), 0);
+    for (int i = 1; i <= cnt / 2; i++)
+    {
+        loop.push_back(loop[i]);
+    }
+    vector<int> pre(cnt + 1, 0);
+    for (int i = 1; i <= cnt; i++)
+    {
+        pre[i] = pre[i - 1] + (t[loop[i]] == 1);
+    }
+    deque<pair<int, int>> dq;
+    for (int i = 1; i <= cnt; i++)
+    {
+        while (!dq.empty() && i - dq.front().first + 1 > cnt / 2)
+        {
+            dq.pop_front();
+        }
+        if (!dq.empty())
+        {
+            ans = max(ans, d1[loop[i]] + pre[i] + dq.front().second);
+        }
+        while (!dq.empty() && dq.back().second < d1[loop[i]] - pre[i - 1])
+        {
+            dq.pop_back();
+        }
+        dq.push_back({i, d1[loop[i]] - pre[i - 1]});
+    }
+
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
