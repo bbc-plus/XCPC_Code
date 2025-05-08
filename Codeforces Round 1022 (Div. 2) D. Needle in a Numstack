@@ -1,0 +1,136 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+int query(int x)
+{
+    cout << '?' << ' ' << x << '\n';
+    cout.flush();
+    int res;
+    cin >> res;
+    return res;
+}
+
+void answer(int a, int b)
+{
+    if (a == -1 && b == -1)
+    {
+        cout << '!' << ' ' << -1 << '\n';
+        cout.flush();
+    }
+    else
+    {
+        cout << '!' << ' ' << a << ' ' << b << '\n';
+        cout.flush();
+    }
+    return;
+}
+
+void solve()
+{
+    int n, k;
+    cin >> n >> k;
+    if (n == 2 * k)
+    {
+        answer(k, k);
+        return;
+    }
+    int l1 = 1, r1 = k, l2 = n - k + 1, r2 = n;
+    vector<int> a(k + 1), b(k + 1);
+    for (int i = l1; i <= r1; i++)
+    {
+        a[i] = query(i);
+    }
+    int pos = -1;
+    for (int i = l2; i <= r2; i++)
+    {
+        b[i - l2 + 1] = query(i);
+        if (pos == -1)
+        {
+            int tmp = i % k;
+            if (tmp == 0)
+            {
+                tmp = k;
+            }
+            if (a[tmp] != b[i - l2 + 1])
+            {
+                pos = tmp;
+            }
+        }
+    }
+    if (pos == -1)
+    {
+        answer(-1, -1);
+        return;
+    }
+
+    int r = 0;
+    for (int i = k + pos; i <= n; i += k)
+    {
+        r++;
+    }
+    int l = 1;
+    while (l < r)
+    {
+        int mid = (l + r) >> 1;
+        if (query(pos + k * mid) != a[pos])
+        {
+            r = mid;
+        }
+        else
+        {
+            l = mid + 1;
+        }
+    }
+    int p = pos + k * l;
+
+    r = min(p, l2), l = max(p - k, r1);
+    for (int i = p - 1; i > p - k; i--)
+    {
+        int res = query(i);
+        int p1 = i % k;
+        if (p1 == 0)
+        {
+            p1 = k;
+        }
+        int p2 = (n + 1 - i) % k;
+        if (p2 == 0)
+        {
+            p2 = k;
+        }
+        if (a[p1] != b[k + 1 - p2])
+        {
+            if (a[p1] == res)
+            {
+                l = max(l, i);
+            }
+            else
+            {
+                r = min(r, i);
+            }
+        }
+    }
+    if (l == r - 1)
+    {
+        answer(l, n - l);
+    }
+    else
+    {
+        answer(-1, -1);
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
