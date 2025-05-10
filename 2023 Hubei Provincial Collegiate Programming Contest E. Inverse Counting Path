@@ -1,0 +1,135 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+int m[6][3][3] = {
+    {},
+    {
+        {1, 0, 0},
+        {1, 0, 0},
+        {1, 1, 1},
+    },
+    {
+        {1, 0, 0},
+        {1, 1, 0},
+        {1, 1, 1},
+    },
+    {
+        {1, 1, 0},
+        {1, 1, 0},
+        {1, 1, 1},
+    },
+    {
+        {1, 1, 0},
+        {1, 1, 1},
+        {0, 1, 1},
+    },
+    {
+        {1, 1, 0},
+        {1, 1, 1},
+        {1, 1, 1},
+    }};
+
+void solve()
+{
+    int x;
+    cin >> x;
+    vector<vector<int>> a(31, vector<int>(31, 0));
+
+    vector<int> num;
+    while (x)
+    {
+        num.push_back(x % 6);
+        x /= 6;
+    }
+    for (int k = 0; k < num.size(); k++)
+    {
+        int p1 = 1 + k * 2;
+        if (k == 0)
+        {
+            a[1][1] = 1;
+        }
+        else
+        {
+            for (int i = p1 - 2; i <= p1; i++)
+            {
+                for (int j = p1 - 2; j <= p1; j++)
+                {
+                    a[i][j] = 1;
+                }
+            }
+        }
+
+        if (num[k] > 0)
+        {
+            if (k & 1)
+            {
+                for (int j = p1; j <= 26; j++)
+                {
+                    a[p1][j] = 1;
+                }
+
+                int sx = p1, sy = 26;
+                for (int i = sx; i <= sx + 2; i++)
+                {
+                    for (int j = sy; j <= sy + 2; j++)
+                    {
+                        a[i][j] = m[num[k]][i - sx][j - sy];
+                    }
+                }
+
+                a[p1 + 2][29] = 1;
+                for (int i = p1 + 2; i <= 30; i++)
+                {
+                    a[i][30] = 1;
+                }
+            }
+            else
+            {
+                for (int i = p1; i <= 26; i++)
+                {
+                    a[i][p1] = 1;
+                }
+
+                int sx = 26, sy = p1;
+                for (int i = sx; i <= sx + 2; i++)
+                {
+                    for (int j = sy; j <= sy + 2; j++)
+                    {
+                        a[i][j] = m[num[k]][i - sx][j - sy];
+                    }
+                }
+
+                a[29][p1 + 2] = 1;
+                for (int j = p1 + 2; j <= 30; j++)
+                {
+                    a[30][j] = 1;
+                }
+            }
+        }
+    }
+
+    cout << 30 << '\n';
+    for (int i = 1; i <= 30; i++)
+    {
+        for (int j = 1; j <= 30; j++)
+        {
+            cout << a[i][j] << " \n"[j == 30];
+        }
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
