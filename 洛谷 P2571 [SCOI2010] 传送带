@@ -1,0 +1,77 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int ax, ay, bx, by, cx, cy, dx, dy, inP, inQ, inR;
+    cin >> ax >> ay >> bx >> by >> cx >> cy >> dx >> dy >> inP >> inQ >> inR;
+    double P = inP, Q = inQ, R = inR;
+
+    auto dis = [&](pair<double, double> a, pair<double, double> b) -> double
+    {
+        return sqrt((a.first - b.first) * (a.first - b.first) + (a.second - b.second) * (a.second - b.second));
+    };
+
+    auto calc = [&](pair<double, double> x) -> double
+    {
+        double part1 = dis({ax, ay}, x) / P;
+
+        auto cl = [&](pair<double, double> y) -> double
+        {
+            double part2 = dis(x, y) / R;
+            double part3 = dis(y, {dx, dy}) / Q;
+            return part2 + part3;
+        };
+
+        pair<double, double> l2 = {cx, cy}, r2 = {dx, dy};
+        while (dis(l2, r2) > 1e-8)
+        {
+            pair<double, double> m1, m2;
+
+            m1.first = l2.first + (r2.first - l2.first) / 3.0;
+            m1.second = l2.second + (r2.second - l2.second) / 3.0;
+            m2.first = r2.first - (r2.first - l2.first) / 3.0;
+            m2.second = r2.second - (r2.second - l2.second) / 3.0;
+
+            if (cl(m1) > cl(m2))
+                l2 = m1;
+            else
+                r2 = m2;
+        }
+
+        return part1 + min(cl(l2), cl(r2));
+    };
+
+    pair<double, double> l = {ax, ay}, r = {bx, by};
+    while (dis(l, r) > 1e-8)
+    {
+        pair<double, double> mid1, mid2;
+
+        mid1.first = l.first + (r.first - l.first) / 3.0;
+        mid1.second = l.second + (r.second - l.second) / 3.0;
+        mid2.first = r.first - (r.first - l.first) / 3.0;
+        mid2.second = r.second - (r.second - l.second) / 3.0;
+
+        if (calc(mid1) > calc(mid2))
+            l = mid1;
+        else
+            r = mid2;
+    }
+    cout << fixed << setprecision(2) << min(calc(l), calc(r)) << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
