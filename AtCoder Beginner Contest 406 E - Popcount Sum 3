@@ -1,0 +1,68 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n, k;
+    cin >> n >> k;
+    int mod = 998244353;
+    vector<vector<vector<int>>> f(61, vector<vector<int>>(k + 1, vector<int>(2, 0)));
+    vector<vector<vector<int>>> g(61, vector<vector<int>>(k + 1, vector<int>(2, 0)));
+    f[60][0][1] = 1;
+    for (int i = 59; i >= 0; i--)
+    {
+        if ((n >> i) & 1)
+        {
+            for (int j = 0; j <= k; j++)
+            {
+                f[i][j][0] += f[i + 1][j][1];
+                g[i][j][0] += g[i + 1][j][1];
+                if (j > 0)
+                {
+                    f[i][j][1] += f[i + 1][j - 1][1];
+                    g[i][j][1] += f[i + 1][j - 1][1] * (1LL << i) % mod + g[i + 1][j - 1][1];
+                }
+            }
+        }
+        else
+        {
+            for (int j = 0; j <= k; j++)
+            {
+                f[i][j][1] += f[i + 1][j][1];
+                g[i][j][1] += g[i + 1][j][1];
+            }
+        }
+        for (int j = 0; j <= k; j++)
+        {
+            f[i][j][0] += f[i + 1][j][0];
+            g[i][j][0] += g[i + 1][j][0];
+            if (j > 0)
+            {
+                f[i][j][0] += f[i + 1][j - 1][0];
+                g[i][j][0] += f[i + 1][j - 1][0] * (1LL << i) % mod + g[i + 1][j - 1][0];
+            }
+            f[i][j][0] %= mod;
+            f[i][j][1] %= mod;
+            g[i][j][0] %= mod;
+            g[i][j][1] %= mod;
+        }
+    }
+    int ans = (g[0][k][0] + g[0][k][1]) % mod;
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
