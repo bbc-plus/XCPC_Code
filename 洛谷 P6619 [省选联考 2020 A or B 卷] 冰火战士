@@ -1,0 +1,180 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+struct Fenwick
+{
+    int n;
+    vector<int> tr;
+    Fenwick(int _n)
+    {
+        n = _n;
+        tr.resize(n + 1, 0);
+    }
+    int lowbit(int x)
+    {
+        return x & -x;
+    }
+    void update(int x, int val)
+    {
+        while (x <= n)
+        {
+            tr[x] += val;
+            x += lowbit(x);
+        }
+    }
+    void update(int l, int r, int val)
+    {
+        update(l, val);
+        update(r + 1, -val);
+    }
+    int query(int x)
+    {
+        int res = 0;
+        while (x)
+        {
+            res += tr[x];
+            x -= lowbit(x);
+        }
+        return res;
+    }
+};
+
+void solve()
+{
+    int Q;
+    cin >> Q;
+    vector<int> op(Q + 1), ty(Q + 1), x(Q + 1), y(Q + 1);
+    vector<int> arr = {-1};
+    for (int i = 1; i <= Q; i++)
+    {
+        cin >> op[i];
+        if (op[i] == 1)
+        {
+            cin >> ty[i] >> x[i] >> y[i];
+            arr.push_back(x[i]);
+        }
+        else
+        {
+            cin >> ty[i];
+        }
+    }
+
+    vector<int> mp(Q + 1), fmp(Q + 1);
+    sort(arr.begin() + 1, arr.end());
+    arr.erase(unique(arr.begin() + 1, arr.end()), arr.end());
+    int idx = arr.size() - 1;
+    for (int i = 1; i <= Q; i++)
+    {
+        if (op[i] == 1)
+        {
+            int pos = lower_bound(arr.begin() + 1, arr.end(), x[i]) - arr.begin();
+            mp[i] = pos;
+            fmp[pos] = x[i];
+        }
+    }
+
+    int cnt1 = 0, cnt2 = 0, sum2 = 0;
+    Fenwick f1(idx), f2(idx);
+    for (int i = 1; i <= Q; i++)
+    {
+        if (op[i] == 1)
+        {
+            if (ty[i] == 0)
+            {
+                cnt1++;
+                f1.update(mp[i], idx, y[i]);
+            }
+            else
+            {
+                cnt2++;
+                f2.update(1, mp[i], y[i]);
+                sum2 += y[i];
+            }
+        }
+        else
+        {
+            int tg = ty[i];
+            if (ty[tg] == 0)
+            {
+                cnt1--;
+                f1.update(mp[tg], idx, -y[tg]);
+            }
+            else
+            {
+                cnt2--;
+                f2.update(1, mp[tg], -y[tg]);
+                sum2 -= y[i];
+            }
+        }
+        if (cnt1 == 0 || cnt2 == 0)
+        {
+            cout << "Peace\n";
+        }
+        else
+        {
+            int p1 = 0, s1 = 0, s2 = 0;
+            for (int j = (1 << __lg(idx)); j > 0; j /= 2)
+            {
+                if (p1 + j <= idx && s1 + f1.tr[p1 + j] <= s2 + f2.tr[p1 + j])
+                {
+                    p1 += j;
+                    s1 += f1.tr[p1];
+                    s2 += f2.tr[p1];
+                }
+            }
+            int t1 = 2 * min(s1, s2);
+
+            int p2 = 0, t2;
+            if (p1 + 1 <= idx)
+            {
+                int tmp = min(f1.query(p1 + 1), f2.query(p1 + 1));
+
+                s1 = 0, s2 = 0;
+                for (int j = (1 << __lg(idx)); j > 0; j /= 2)
+                {
+                    if (p2 + j <= idx && (p2 + j <= p1 || min(s1 + f1.tr[p2 + j], s2 + f2.tr[p2 + j]) == tmp))
+                    {
+                        p2 += j;
+                        s1 += f1.tr[p2];
+                        s2 += f2.tr[p2];
+                    }
+                }
+                t2 = 2 * min(s1, s2);
+            }
+            else
+            {
+                p2 = p1;
+                t2 = t1;
+            }
+
+            if (max(t1, t2) == 0)
+            {
+                cout << "Peace" << '\n';
+            }
+            else if (t1 > t2)
+            {
+                cout << fmp[p1] << ' ' << t1 << '\n';
+            }
+            else
+            {
+                cout << fmp[p2] << ' ' << t2 << '\n';
+            }
+        }
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
