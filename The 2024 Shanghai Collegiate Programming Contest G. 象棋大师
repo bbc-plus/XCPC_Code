@@ -1,0 +1,133 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+int vis[1026][101][101], f[1026][101][101], g[101][101];
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+
+    int d1[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+    int d2[4][2] = {{2, -1}, {-2, -1}, {-1, 2}, {-1, -2}};
+    int d3[4][2] = {{2, 1}, {-2, 1}, {1, 2}, {1, -2}};
+
+    int up = (1LL << m), mod = 998244353;
+    memset(g, -1, sizeof(g));
+
+    vector<int> x(m), y(m);
+    for (int i = 0; i < m; i++)
+    {
+        cin >> x[i] >> y[i];
+        g[x[i]][y[i]] = i;
+    }
+
+    auto check = [&](int x, int y) -> bool
+    {
+        if (x < 0 || x > n || y < 0 || y > n)
+        {
+            return 0;
+        }
+        return 1;
+    };
+
+    for (int i = 0; i < up; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            if ((i >> j) & 1)
+            {
+                for (int k = 0; k < 4; k++)
+                {
+                    bool ok = 1;
+                    int nx = x[j] + d1[k][0], ny = y[j] + d1[k][1];
+                    if (check(nx, ny) && g[nx][ny] != -1)
+                    {
+                        if ((i >> g[nx][ny]) & 1)
+                        {
+                            ok = 0;
+                        }
+                    }
+
+                    if (ok == 1)
+                    {
+                        nx = x[j] + d2[k][0], ny = y[j] + d2[k][1];
+                        if (check(nx, ny))
+                        {
+                            vis[i][nx][ny] = 1;
+                        }
+                        nx = x[j] + d3[k][0], ny = y[j] + d3[k][1];
+                        if (check(nx, ny))
+                        {
+                            vis[i][nx][ny] = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (vis[up - 1][0][0] == 1)
+    {
+        cout << 0 << '\n';
+        return;
+    }
+
+    f[up - 1][0][0] = 1;
+    for (int i = 0; i <= n; i++)
+    {
+        for (int j = 0; j <= n; j++)
+        {
+            for (int s = 0; s < up; s++)
+            {
+                if (vis[s][i][j] == 1)
+                {
+                    continue;
+                }
+                int val = 0;
+                if (g[i][j] != -1)
+                {
+                    val = (1LL << g[i][j]);
+                    if (((s >> g[i][j]) & 1) == 0)
+                    {
+                        continue;
+                    }
+                }
+                int ns = s ^ val;
+                if (check(i - 1, j))
+                {
+                    f[ns][i][j] += f[s][i - 1][j];
+                }
+                if (check(i, j - 1))
+                {
+                    f[ns][i][j] += f[s][i][j - 1];
+                }
+                f[ns][i][j] %= mod;
+            }
+        }
+    }
+
+    int ans = 0;
+    for (int s = 0; s < up; s++)
+    {
+        ans += f[s][n][n];
+        ans %= mod;
+    }
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
