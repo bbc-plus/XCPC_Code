@@ -1,0 +1,111 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    vector<array<int, 2>> a(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i][1];
+    }
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i][0];
+    }
+
+    sort(a.begin(), a.end());
+
+    struct node
+    {
+        int time, sum, have;
+
+        bool operator<(const node a) const
+        {
+            if (time == a.time)
+            {
+                return have < a.have;
+            }
+            return time < a.time;
+        }
+    };
+
+    int half = (n + 1) / 2;
+    vector<vector<node>> b(half + 1), c(half + 1);
+
+    auto dfs = [&](auto dfs, int l, int r, int cnt, int time, int sum, int have, vector<vector<node>> &vec) -> void
+    {
+        if (time > m)
+        {
+            return;
+        }
+        if (l > r)
+        {
+            vec[cnt].push_back({time, sum, have});
+            return;
+        }
+        dfs(dfs, l + 1, r, cnt + 1, time + a[l][1], sum + a[l][0], have + cnt * a[l][0], vec);
+        dfs(dfs, l + 1, r, cnt, time, sum, have, vec);
+    };
+
+    dfs(dfs, 0, half - 1, 0, 0, 0, 0, b);
+    dfs(dfs, half, n - 1, 0, 0, 0, 0, c);
+
+    vector<vector<node>> nb(half + 1);
+    for (int i = 0; i <= half; i++)
+    {
+        sort(b[i].begin(), b[i].end());
+        for (auto [ti, su, ha] : b[i])
+        {
+            if (nb[i].empty() || ha > nb[i].back().have)
+            {
+                nb[i].push_back({ti, su, ha});
+            }
+        }
+    }
+
+    b = move(nb);
+    int inf = 1e18 + 6;
+
+    int ans = 0;
+    for (int i = 0; i <= half; i++)
+    {
+        for (auto [ti, su, ha] : c[i])
+        {
+            for (int k = 0; k <= half; k++)
+            {
+                if (b[k].empty())
+                {
+                    continue;
+                }
+                auto pos = upper_bound(b[k].begin(), b[k].end(), (node){m - ti, inf, inf});
+                if (pos == b[k].begin())
+                {
+                    continue;
+                }
+                pos = prev(pos);
+
+                ans = max(ans, pos->have + k * su + ha);
+            }
+        }
+    }
+
+    cout << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
