@@ -1,0 +1,211 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+template <typename T>
+struct Flow_
+{
+    const int n;
+    const T inf = numeric_limits<T>::max();
+    struct Edge
+    {
+        int to;
+        T w;
+        Edge(int to, T w) : to(to), w(w) {}
+    };
+    vector<Edge> ver;
+    vector<vector<int>> h;
+    vector<int> cur, d;
+
+    Flow_(int n) : n(n + 1), h(n + 1) {}
+    void add(int u, int v, T c)
+    {
+        h[u].push_back(ver.size());
+        ver.emplace_back(v, c);
+        h[v].push_back(ver.size());
+        ver.emplace_back(u, 0);
+    }
+    bool bfs(int s, int t)
+    {
+        d.assign(n, -1);
+        d[s] = 0;
+        queue<int> q;
+        q.push(s);
+        while (!q.empty())
+        {
+            auto x = q.front();
+            q.pop();
+            for (auto it : h[x])
+            {
+                auto [y, w] = ver[it];
+                if (w && d[y] == -1)
+                {
+                    d[y] = d[x] + 1;
+                    if (y == t)
+                        return true;
+                    q.push(y);
+                }
+            }
+        }
+        return false;
+    }
+    T dfs(int u, int t, T f)
+    {
+        if (u == t)
+            return f;
+        auto r = f;
+        for (int &i = cur[u]; i < h[u].size(); i++)
+        {
+            auto j = h[u][i];
+            auto &[v, c] = ver[j];
+            auto &[u, rc] = ver[j ^ 1];
+            if (c && d[v] == d[u] + 1)
+            {
+                auto a = dfs(v, t, std::min(r, c));
+                c -= a;
+                rc += a;
+                r -= a;
+                if (!r)
+                    return f;
+            }
+        }
+        return f - r;
+    }
+    T work(int s, int t)
+    {
+        T ans = 0;
+        while (bfs(s, t))
+        {
+            cur.assign(n, 0);
+            ans += dfs(s, t, inf);
+        }
+        return ans;
+    }
+};
+using Flow = Flow_<int>;
+
+const int MAX = 2e4 + 6;
+int isP[MAX];
+
+void solve()
+{
+    int n;
+    cin >> n;
+    int s = 0, t = n + 1;
+    Flow flow(t);
+    for (int i = 1; i <= n; i++)
+    {
+        if (i & 1)
+        {
+            flow.add(s, i, 2);
+        }
+        else
+        {
+            flow.add(i, t, 2);
+        }
+    }
+    for (int i = 1; i <= n; i += 2)
+    {
+        for (int j = 2; j <= n; j += 2)
+        {
+            if (isP[i + j])
+            {
+                flow.add(i, j, 1);
+            }
+        }
+    }
+    if (flow.work(s, t) == n)
+    {
+        vector<vector<int>> e(n + 1);
+        vector<bool> vis(n + 1, 0);
+        vector<vector<int>> ans;
+        for (int i = 1; i <= n; i += 2)
+        {
+            for (auto k : flow.h[i])
+            {
+                auto [j, w] = flow.ver[k];
+                if (w == 0)
+                {
+                    e[i].push_back(j);
+                    e[j].push_back(i);
+                }
+            }
+        }
+        vector<int> num;
+        auto dfs = [&](auto dfs, int u) -> void
+        {
+            vis[u] = 1;
+            num.push_back(u);
+            for (auto v : e[u])
+            {
+                if (vis[v] == 1)
+                {
+                    continue;
+                }
+                dfs(dfs, v);
+            }
+        };
+        for (int i = 1; i <= n; i++)
+        {
+            if (vis[i] == 1)
+            {
+                continue;
+            }
+            num.clear();
+            dfs(dfs, i);
+            ans.push_back(num);
+        }
+        cout << ans.size() << '\n';
+        for (auto vec : ans)
+        {
+            cout << vec.size() << ' ';
+            for (int i = 0; i < vec.size(); i++)
+            {
+                cout << vec[i] << " \n"[i == (int)(vec.size()) - 1];
+            }
+        }
+    }
+    else
+    {
+        cout << -1 << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    vector<int> prime;
+    auto euler_Prime = [&](int n) -> void
+    {
+        vector<int> v(n + 1);
+        for (int i = 2; i <= n; i++)
+        {
+            if (v[i] == 0)
+            {
+                v[i] = i;
+                prime.push_back(i);
+                isP[i] = 1;
+            }
+            for (auto pri : prime)
+            {
+                if (pri > v[i] || pri > n / i)
+                {
+                    break;
+                }
+                v[i * pri] = pri;
+            }
+        }
+    };
+    euler_Prime(2e4);
+
+    int T = 1;
+    // cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
