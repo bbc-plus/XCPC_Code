@@ -1,0 +1,131 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+const int MAX = 456;
+vector<pair<int, int>> vec[MAX][MAX];
+vector<int> _2;
+
+int cal(int x)
+{
+    return lower_bound(_2.begin(), _2.end(), x) - _2.begin() + 1;
+}
+
+void solve()
+{
+    int n;
+    cin >> n;
+    vector<int> a(n + 1), pre(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> a[i];
+        pre[i] = pre[i - 1] + a[i];
+    }
+    auto dif = [&](int l, int r, int k) -> int
+    {
+        return abs(pre[k] - pre[l - 1] - (pre[r] - pre[k]));
+    };
+    auto cost = [&](int l, int r, int k) -> int
+    {
+        int l1 = pre[k] - pre[l - 1], l2 = pre[r] - pre[k];
+        return min(l1, l2) * cal(l1 + l2);
+    };
+    int inf = 1e18;
+    for (int i = 0; i <= n + 1; i++)
+    {
+        for (int j = 0; j <= n + 1; j++)
+        {
+            vec[i][j].clear();
+        }
+    }
+    for (int len = 2; len <= n; len++)
+    {
+        for (int l = 1; l < n; l++)
+        {
+            int r = l + len - 1;
+            if (r > n)
+            {
+                break;
+            }
+            for (int k = l; k < r; k++)
+            {
+                int dif0 = dif(l, r, k);
+
+                int m1 = inf, m2 = inf;
+                if (l == k)
+                {
+                    m1 = 0;
+                }
+                else
+                {
+                    auto it = upper_bound(vec[l][k].begin(), vec[l][k].end(), (pair<int, int>){dif0, inf});
+                    if (it != vec[l][k].begin())
+                    {
+                        m1 = prev(it)->second;
+                    }
+                }
+
+                if (k + 1 == r)
+                {
+                    m2 = 0;
+                }
+                else
+                {
+                    auto it = upper_bound(vec[k + 1][r].begin(), vec[k + 1][r].end(), (pair<int, int>){dif0, inf});
+                    if (it != vec[k + 1][r].begin())
+                    {
+                        m2 = prev(it)->second;
+                    }
+                }
+
+                vec[l][r].push_back({dif0, min(inf, m1 + m2 + cost(l, r, k))});
+            }
+            if (len == n && l == 1)
+            {
+                for (int k = 0; k < n - 1; k++)
+                {
+                    if (vec[l][r][k].second == inf)
+                    {
+                        cout << -1 << " \n"[k == n - 2];
+                    }
+                    else
+                    {
+                        cout << vec[l][r][k].second << " \n"[k == n - 2];
+                    }
+                }
+                break;
+            }
+            sort(vec[l][r].begin(), vec[l][r].end());
+            for (int i = 1; i < vec[l][r].size(); i++)
+            {
+                vec[l][r][i].second = min(vec[l][r][i].second, vec[l][r][i - 1].second);
+            }
+        }
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int tmp = 2;
+    while (1)
+    {
+        _2.push_back(tmp);
+        tmp *= 2;
+        if (tmp > 1e12)
+        {
+            break;
+        }
+    }
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
