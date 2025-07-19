@@ -1,0 +1,124 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+long double pi = acos(-1.0);
+
+void solve()
+{
+    int n, x, y;
+    cin >> n >> x >> y;
+    vector<int> xi(n + 2), yi(n + 2), num(n + 1);
+    vector<long double> v;
+    auto cal = [&](int x1, int y1, int x2, int y2) -> int
+    {
+        return abs(x1 - x2) * abs(x1 - x2) + abs(y1 - y2) * abs(y1 - y2);
+    };
+    auto jiao = [&](int x, int y) -> long double
+    {
+        if (x == 0 && y == 0)
+        {
+            assert(0);
+        }
+        else if (x == 0 && y > 0)
+        {
+            return pi / 2.0;
+        }
+        else if (x == 0 && y < 0)
+        {
+            return pi / 2.0 * 3.0;
+        }
+        else if (y == 0 && x > 0)
+        {
+            return 0.0;
+        }
+        else if (y == 0 && x < 0)
+        {
+            return pi;
+        }
+        else if (x > 0 && y > 0)
+        {
+            return atan((long double)y / x);
+        }
+        else if (x < 0 && y > 0)
+        {
+            return atan((long double)(-x) / y) + pi / 2.0;
+        }
+        else if (x < 0 && y < 0)
+        {
+            return atan((long double)(-y) / (-x)) + pi;
+        }
+        else if (x > 0 && y < 0)
+        {
+            return atan((long double)x / (-y)) + pi / 2.0 * 3.0;
+        }
+        else
+        {
+            assert(0);
+        }
+    };
+    int maxn = 0;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> xi[i] >> yi[i];
+        num[i] = cal(xi[i], yi[i], x, y);
+        maxn = max(maxn, num[i]);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        if (maxn == num[i])
+        {
+            v.push_back(jiao(xi[i] - x, yi[i] - y));
+        }
+    }
+    xi[n + 1] = xi[1], yi[n + 1] = yi[1];
+    int sum = 0;
+    auto mian = [&](int x1, int y1, int x2, int y2, int x3, int y3) -> int
+    {
+        int dx1 = x1 - x2, dy1 = y1 - y2;
+        int dx2 = x1 - x3, dy2 = y1 - y3;
+        return abs(dx1 * dy2 - dx2 * dy1);
+    };
+    for (int i = 2; i < n; i++)
+    {
+        sum += mian(xi[1], yi[1], xi[i], yi[i], xi[i + 1], yi[i + 1]);
+    }
+    for (int i = 1; i <= n; i++)
+    {
+        sum -= mian(x, y, xi[i], yi[i], xi[i + 1], yi[i + 1]);
+    }
+    if (sum != 0)
+    {
+        cout << fixed << setprecision(15) << 2 * pi << '\n';
+        return;
+    }
+    sort(v.begin(), v.end());
+    long double ans = 0;
+    for (int i = 0; i < v.size(); i++)
+    {
+        if (i == 0)
+        {
+            ans = max(ans, v[0] + 2 * pi - v.back());
+        }
+        else
+        {
+            ans = max(ans, v[i] - v[i - 1]);
+        }
+    }
+    cout << fixed << setprecision(15) << ans << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
