@@ -1,0 +1,206 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+const int MAXN = 1e5 + 6;
+int w[MAXN];
+vector<int> e[MAXN];
+int fa[MAXN], son[MAXN], dep[MAXN], siz[MAXN];
+int top[MAXN], id[MAXN], nw[MAXN], tim;
+int lazy[MAXN];
+
+void dfs1(int u, int father)
+{
+    fa[u] = father, dep[u] = dep[father] + 1, siz[u] = 1;
+    for (int v : e[u])
+    {
+        if (v == father)
+            continue;
+        dfs1(v, u);
+        siz[u] += siz[v];
+        if (siz[son[u]] < siz[v])
+            son[u] = v;
+    }
+}
+void dfs2(int u, int head)
+{
+    top[u] = head, id[u] = ++tim, nw[tim] = w[u];
+    if (son[u] == 0)
+        return;
+    dfs2(son[u], head);
+    for (int v : e[u])
+    {
+        if (v == fa[u] || v == son[u])
+            continue;
+        dfs2(v, v);
+    }
+}
+
+#define lc (p << 1)
+#define rc (p << 1 | 1)
+using i64 = long long;
+
+struct node
+{
+    int l, r;
+    i64 tag;
+} tr[MAXN * 4];
+
+void clear(int n)
+{
+    tim = 0;
+    for (int i = 0; i <= n; i++)
+    {
+        e[i].clear();
+        lazy[i] = 0;
+        son[i] = 0;
+    }
+}
+
+void pushup(int p)
+{
+    tr[p].tag = max(tr[lc].tag, tr[rc].tag);
+}
+
+void build(int p, int l, int r)
+{
+    if (l == r)
+    {
+        tr[p] = {l, r, nw[l]};
+        return;
+    }
+    int mid = l + r >> 1;
+    build(lc, l, mid);
+    build(rc, mid + 1, r);
+    tr[p] = {l, r, max(tr[lc].tag, tr[rc].tag)};
+}
+
+void update(int p, int x, i64 k)
+{
+    if (tr[p].l == x && tr[p].r == x)
+    {
+        tr[p].tag += k;
+        return;
+    }
+    int mid = tr[p].l + tr[p].r >> 1;
+    if (x <= mid)
+        update(lc, x, k);
+    else
+        update(rc, x, k);
+    pushup(p);
+}
+
+i64 query(int p, int x, int y)
+{
+    if (x <= tr[p].l && tr[p].r <= y)
+        return tr[p].tag;
+    int mid = tr[p].l + tr[p].r >> 1;
+    i64 tag = 0;
+    if (x <= mid)
+        tag = max(tag, query(lc, x, y));
+    if (y > mid)
+        tag = max(tag, query(rc, x, y));
+    return tag;
+}
+
+int lca(int u, int v)
+{
+    int ans = 0;
+    while (top[u] != top[v])
+    {
+        if (dep[top[u]] > dep[top[v]])
+        {
+            ans = max(ans, query(1, id[top[u]], id[u]));
+            if (fa[top[u]] != 0)
+            {
+                ans = max(ans, query(1, id[top[u]], id[top[u]]) + lazy[fa[top[u]]]);
+            }
+            u = fa[top[u]];
+        }
+        else
+        {
+            ans = max(ans, query(1, id[top[v]], id[v]));
+            if (fa[top[v]] != 0)
+            {
+                ans = max(ans, query(1, id[top[v]], id[top[v]]) + lazy[fa[top[v]]]);
+            }
+            v = fa[top[v]];
+        }
+    }
+    ans = max(ans, query(1, min(id[u], id[v]), max(id[u], id[v])));
+    if (dep[u] < dep[v])
+    {
+        if (fa[u] != 0 && top[u] == u)
+        {
+            ans = max(ans, query(1, id[u], id[u]) + lazy[fa[u]]);
+        }
+    }
+    else
+    {
+        if (fa[v] != 0 && top[v] == v)
+        {
+            ans = max(ans, query(1, id[v], id[v]) + lazy[fa[v]]);
+        }
+    }
+    return ans;
+}
+
+void add(int x, int z)
+{
+    if (fa[x] != 0)
+        update(1, id[fa[x]], z);
+    if (son[x] != 0)
+        update(1, id[son[x]], z);
+    lazy[x] += z;
+}
+
+void solve()
+{
+    int n, m;
+    cin >> n >> m;
+    for (int i = 1; i <= n; i++)
+    {
+        cin >> w[i];
+    }
+    for (int i = 0; i < n - 1; i++)
+    {
+        int u, v;
+        cin >> u >> v;
+        e[u].push_back(v);
+        e[v].push_back(u);
+    }
+    dfs1(1, 0);
+    dfs2(1, 1);
+    build(1, 1, n);
+    for (int i = 1; i <= m; i++)
+    {
+        int opt;
+        cin >> opt;
+        int x, y;
+        cin >> x >> y;
+        if (opt == 1)
+        {
+            cout << lca(x, y) << '\n';
+        }
+        else
+        {
+            add(x, y);
+        }
+    }
+    clear(n);
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
