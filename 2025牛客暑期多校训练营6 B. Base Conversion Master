@@ -1,0 +1,133 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n, y, M;
+    cin >> n >> y >> M;
+    vector<vector<int>> op(n + 1);
+    for (int i = 1; i <= n; i++)
+    {
+        int k;
+        cin >> k;
+        for (int j = 0; j < k; j++)
+        {
+            int x;
+            cin >> x;
+            op[i].push_back(x);
+        }
+    }
+
+    int inf = 1e9 + 6;
+    auto check = [&](int x, int ty) -> bool
+    {
+        for (int i = 1; i <= n; i++)
+        {
+            int maxn = *max_element(op[i].begin(), op[i].end());
+            if (maxn >= x)
+            {
+                return 0;
+            }
+            if (x == inf)
+            {
+                if (op[i].size() == 1)
+                {
+                    x = op[i][0];
+                }
+                continue;
+            }
+
+            int mul = 1, ns = 0;
+            for (int k = (int)op[i].size() - 1; k >= 0; k--)
+            {
+                if (mul > 1e9)
+                {
+                    ns = inf;
+                    break;
+                }
+                ns += op[i][k] * mul;
+                if (ns > 1e9)
+                {
+                    ns = inf;
+                    break;
+                }
+                mul *= x;
+            }
+            x = ns;
+        }
+        if (ty == 1)
+        {
+            return x >= y;
+        }
+        else
+        {
+            return x > y;
+        }
+    };
+
+    int l = 2, r = M;
+    while (l < r)
+    {
+        int mid = (l + r) >> 1;
+        if (check(mid, 1))
+        {
+            r = mid;
+        }
+        else
+        {
+            l = mid + 1;
+        }
+    }
+    int tl = l;
+    if (tl == M && check(tl, 1) == 0)
+    {
+        cout << -1 << ' ' << -1 << '\n';
+        return;
+    }
+
+    l = 2, r = M;
+    while (l < r)
+    {
+        int mid = (l + r) >> 1;
+        if (check(mid, 2))
+        {
+            r = mid;
+        }
+        else
+        {
+            l = mid + 1;
+        }
+    }
+    int tr = l;
+    if (check(tr, 2) == 0)
+    {
+        tr++;
+    }
+
+    if (tr <= tl)
+    {
+        cout << -1 << ' ' << -1 << '\n';
+    }
+    else
+    {
+        tr--;
+        assert(tl == tr || tr == M);
+        cout << tl << ' ' << tr << '\n';
+    }
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
