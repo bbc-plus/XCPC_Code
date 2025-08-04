@@ -1,0 +1,77 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+void solve()
+{
+    int n, m, k;
+    cin >> n >> m >> k;
+    vector<vector<int>> a(n, vector<int>(m));
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < m; j++)
+        {
+            cin >> a[i][j];
+        }
+    }
+    if (k >= m)
+    {
+        int ans = 0;
+        for (int j = 0; j < m; j++)
+        {
+            int maxn = 0;
+            for (int i = 0; i < n; i++)
+            {
+                maxn = max(maxn, a[i][j]);
+            }
+            ans += maxn;
+        }
+        cout << ans << '\n';
+        return;
+    }
+
+    int up = 1LL << m;
+    vector<int> s1(up, 0);
+    for (int i = 0; i < n; i++)
+    {
+        vector<int> ts(up, 0);
+        for (int j = 0; j < m; j++)
+        {
+            ts[1LL << j] = a[i][j];
+        }
+        for (int j = 1; j < up; j++)
+        {
+            int z = (j - 1) & j;
+            ts[j] = ts[z] + ts[j ^ z];
+            s1[j] = max(s1[j], ts[j]);
+        }
+    }
+
+    vector<int> s2 = s1;
+    for (int i = 0; i < k - 1; i++)
+    {
+        for (int j = up - 1; j >= 0; j--)
+        {
+            for (int z = j; z > 0; z = (z - 1) & j)
+            {
+                s2[j] = max(s2[j], s2[j ^ z] + s1[z]);
+            }
+        }
+    }
+    cout << s2[up - 1] << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
