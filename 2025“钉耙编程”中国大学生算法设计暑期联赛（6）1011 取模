@@ -1,0 +1,90 @@
+#include <bits/stdc++.h>
+using namespace std;
+#define int long long
+
+const int MAX = 5e5 + 6;
+int x[MAX];
+
+void solve()
+{
+    int n, m, c;
+    cin >> n >> m >> c;
+    vector<int> a(n);
+    for (int i = 0; i < n; i++)
+    {
+        cin >> a[i];
+        x[a[i]]++;
+    }
+    vector<int> cnt, b;
+    for (int i = 0; i < n; i++)
+    {
+        if (x[a[i]] != 0)
+        {
+            b.push_back(a[i]);
+            cnt.push_back(x[a[i]]);
+        }
+        x[a[i]] = 0;
+    }
+    if (b.size() <= c)
+    {
+        for (int i = 0; i < cnt.size(); i++)
+        {
+            if (cnt[i] != n / c)
+            {
+                cout << 0 << '\n';
+                return;
+            }
+        }
+        cout << -1 << '\n';
+        return;
+    }
+
+    int sum = cnt.size();
+    vector<int> ans;
+    for (int k = 1; (m / k + 1) * c >= sum; k++)
+    {
+        vector<int> pos;
+        for (int i = 0; i < sum; i++)
+        {
+            x[b[i] % k] += cnt[i];
+            pos.push_back(b[i] % k);
+        }
+        bool ok = 1;
+        for (auto p : pos)
+        {
+            if (x[p] != n / c)
+            {
+                ok = 0;
+            }
+        }
+        for (auto p : pos)
+        {
+            x[p] = 0;
+        }
+        if (ok == 1)
+        {
+            ans.push_back(k);
+        }
+    }
+    cout << ans.size() << ' ';
+    for (auto x : ans)
+    {
+        cout << x << ' ';
+    }
+    cout << '\n';
+}
+
+signed main()
+{
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int T = 1;
+    cin >> T;
+    while (T--)
+    {
+        solve();
+    }
+
+    return 0;
+}
